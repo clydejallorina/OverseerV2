@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Overseer v2 PHP Class: Character
  *
@@ -15,7 +16,7 @@
 
 namespace Overseer;
 
-use \PDO;
+use PDO;
 use Exception;
 
 /**
@@ -32,7 +33,6 @@ use Exception;
  */
 class Character
 {
-
     public int $id;
     public Grist $grist;
     public Strifer $wakeself;
@@ -40,7 +40,7 @@ class Character
     public Strifer $strife;
 
     private PDO $_dbhandle;
-    
+
     // Gate height definitions, defined in reverse.
     private $_gates = array(
                        7 => 24000000,
@@ -53,7 +53,8 @@ class Character
                        0 => 0,
                       );
 
-    private $_data = [], $_datamod = [];
+    private $_data = [];
+    private $_datamod = [];
 
 
     /**
@@ -65,7 +66,7 @@ class Character
      * @param PDO $dbhandle The global PDO object for the database.
      * @param int $initid   The character ID to start with.
      */
-    public function __construct(PDO $dbhandle, int $initid=-1)
+    public function __construct(PDO $dbhandle, int $initid = -1)
     {
 
         $this->_dbhandle = $dbhandle;
@@ -73,8 +74,7 @@ class Character
         if ($this->id != -1) {
             $this->load($this->id);
         }
-
-    }//end __construct()
+    }
 
 
     /**
@@ -94,28 +94,26 @@ class Character
 
         // Check for any special variables that require "thinking".
         switch ($name) {
-        case "gatesreached":
-            foreach ($this->_gates as $gate => $reqheight) {
-                if ($this->house_build >= $reqheight) {
-                    return $gate;
-                    break;
+            case "gatesreached":
+                foreach ($this->_gates as $gate => $reqheight) {
+                    if ($this->house_build >= $reqheight) {
+                        return $gate;
+                    }
                 }
-            }
-            break;
+                break;
 
-        // Default back to loading a variable from a _data key otherwise.
-        default:
-            if (array_key_exists($name, $this->_data)) {
-                return $this->_data[$name];
-            }
-            break;
+                // Default back to loading a variable from a _data key otherwise.
+            default:
+                if (array_key_exists($name, $this->_data)) {
+                    return $this->_data[$name];
+                }
+                break;
         }
 
         // Output would have been returned by now, nullifying the function
         // from even getting to this point, so return null.
         return null;
-
-    }//end __get()
+    }
 
 
     /**
@@ -139,8 +137,7 @@ class Character
                 $this->_datamod[] = $name;
             }
         }
-
-    }//end __set()
+    }
 
 
     /**
@@ -231,7 +228,7 @@ class Character
                     'strifedeck',
                     'modus',
                    );
-        
+
         // Enumerate boolean numerics.
         $booleans = array(
                      'inmedium',
@@ -252,7 +249,7 @@ class Character
         foreach ($directs as $dbkey) {
             $this->_data[$dbkey] = $charrow[$dbkey];
         }
-        
+
         // Convert boolean numerics to booleans and store as data keys.
         foreach ($booleans as $dbkey) {
             // Convert 1 to true and 0 to false.
@@ -263,7 +260,7 @@ class Character
             } else {
                 // Cry because we're not working with booleans.
                 throw new Exception(
-                    'Non-boolean numeric value found in dbkey '.$dbkey.'.'
+                    'Non-boolean numeric value found in dbkey ' . $dbkey . '.'
                 );
             }
 
@@ -274,7 +271,7 @@ class Character
             // Unset our used variables to save memory.
             unset($convertedvalue);
         }
-        
+
         // Convert lists to arrays and store into data keys.
         foreach ($lists as $dbkey) {
             $this->_data[$dbkey] = [];
@@ -309,7 +306,6 @@ class Character
         } else {
             $this->strife = &$this->dreamself;
         }
-
     }
 
 
@@ -330,7 +326,7 @@ class Character
         // Save the strifer rows since they should handle themselves.
         //$this->wakeself->save();
         //$this->dreamself->save();
-        
+
         // Check if the grist array has been modified, export it if so.
         if ($this->grist->modified) {
             $updatepairs[]          = 'grists';
@@ -340,43 +336,43 @@ class Character
             // it's used again after we save.
             $this->grist->modified = false;
         }
-        
+
         if (count($this->_datamod) != 0) {
             foreach ($this->_datamod as $modkey) {
                 switch ($modkey) {
-                // Here would be a perfect place to set custom handlers
-                // for custom datatypes.
-                // By default, sort out data types by object type.
-                default:
-                    switch (gettype($this->_data[$modkey])) {
-                    // Booleans must be converted to 1's and 0's.
-                    case 'boolean':
-                        $updatepairs[] = $modkey;
-                        if ($this->_data[$modkey] == true) {
-                            $updatevalues[$modkey] = 1;
-                        } else {
-                            $updatevalues[$modkey] = 0;
+                    // Here would be a perfect place to set custom handlers
+                    // for custom datatypes.
+                    // By default, sort out data types by object type.
+                    default:
+                        switch (gettype($this->_data[$modkey])) {
+                            // Booleans must be converted to 1's and 0's.
+                            case 'boolean':
+                                $updatepairs[] = $modkey;
+                                if ($this->_data[$modkey] == true) {
+                                    $updatevalues[$modkey] = 1;
+                                } else {
+                                    $updatevalues[$modkey] = 0;
+                                }
+                                break;
+                                // Anything that is a number or a string is stored directly.
+                            case 'integer':
+                            case 'double':
+                            case 'float':
+                            case 'string':
+                                $updatepairs[]        = $modkey;
+                                $updatebinds[$modkey] = &$this->_data[$modkey];
+                                break;
+                                // Arrays must be converted to "old" implode format.
+                            case 'array':
+                                // An array handler still needs to be written.
+                                true;
+                                break;
                         }
                         break;
-                    // Anything that is a number or a string is stored directly.
-                    case 'integer':
-                    case 'double':
-                    case 'float':
-                    case 'string':
-                        $updatepairs[]        = $modkey;
-                        $updatebinds[$modkey] = &$this->_data[$modkey];
-                        break;
-                    // Arrays must be converted to "old" implode format.
-                    case 'array':
-                        // An array handler still needs to be written.
-                        true;
-                        break;
-                    }//end switch
-                    break;
-                }//end switch
-            }//end foreach
-        }//end if
-        
+                }
+            }
+        }
+
         // Check if we have anything to submit.
         if (count($updatepairs) != 0) {
             // Create an empty array as a basis.
@@ -405,6 +401,6 @@ class Character
 
             $updatechar->bindParam(':charid', $this->id);
             $updatechar->execute();
-        }//end if
-    }//end save()
-}//end class
+        }
+    }
+}

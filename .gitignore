@@ -9,3 +9,5 @@ composer.phar
 /devtools/debuglog.txt
 /devtools/cheatpolice.txt
 phpinfo.php
+
+.php-cs-fixer.cache

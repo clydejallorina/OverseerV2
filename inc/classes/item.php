@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Overseer v2 PHP Class: Item
  *
@@ -14,7 +15,8 @@
  */
 
 namespace Overseer;
-use \PDO;
+
+use PDO;
 use Exception;
 
 /**
@@ -28,7 +30,8 @@ use Exception;
  * @license  http://overseer2.com/license.txt Fail License 2015
  * @link     http://overseer2.com/ Project Site
  */
-class Item {
+class Item
+{
     public int $id;
     public Code $code;
     public Grist $gristCost;
@@ -47,7 +50,8 @@ class Item {
      *
      * @access public
      */
-    public function __construct(PDO $dbhandle, int $initid=-1) {
+    public function __construct(PDO $dbhandle, int $initid = -1)
+    {
         $this->_dbhandle = $dbhandle;
         $this->id = $initid;
         if ($this->id != -1) {
@@ -69,13 +73,14 @@ class Item {
      *
      * @access public
      */
-    public function __get($name) {
+    public function __get($name)
+    {
         switch ($name) {
-        default:
-            if (array_key_exists($name, $this->_data)) {
-                return $this->_data[$name];
-            }
-            break;
+            default:
+                if (array_key_exists($name, $this->_data)) {
+                    return $this->_data[$name];
+                }
+                break;
         }
         return null;
     }
@@ -91,7 +96,8 @@ class Item {
      *
      * @access public
      */
-    public function load($itemID): void {
+    public function load($itemID): void
+    {
         // Get the item's row to load it into the object
         $itemquery = $this->_dbhandle->prepare(
             'SELECT * FROM `Captchalogue` WHERE `ID` = :itemid'
@@ -138,8 +144,8 @@ class Item {
             'abstain'         => $itemrow['abstain'],
         );
 
-		// Captchalogue code
-		$this->code = new Code($itemrow['code']);
+        // Captchalogue code
+        $this->code = new Code($itemrow['code']);
 
         // Enumerate boolean numerics
         $booleans = array(
@@ -157,7 +163,7 @@ class Item {
                 $convertedvalue = false;
             } else {
                 throw new Exception(
-                    'Non-boolean numeric value found in dbkey '.$dbkey.'.'
+                    'Non-boolean numeric value found in dbkey ' . $dbkey . '.'
                 );
             }
             $this->_data[$datakey] = $convertedvalue;
@@ -169,5 +175,3 @@ class Item {
         $this->gristCost->importOld($itemrow['gristcosts']);
     }
 }
-
-?>

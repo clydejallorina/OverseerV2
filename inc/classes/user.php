@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Overseer v2 PHP Class: User
  *
@@ -15,7 +16,7 @@
 
 namespace Overseer;
 
-use \PDO;
+use PDO;
 
 /**
  * User data handling class
@@ -31,7 +32,6 @@ use \PDO;
  */
 class User
 {
-
     public int $id;
     /** @var list<Character> */
     public array $characters;
@@ -55,7 +55,7 @@ class User
      *
      * @access public
      */
-    public function __construct(PDO $dbhandle, int $initid=-1, bool $userbystring=false)
+    public function __construct(PDO $dbhandle, int $initid = -1, bool $userbystring = false)
     {
 
         $this->_dbhandle = $dbhandle;
@@ -63,8 +63,7 @@ class User
         if ($this->id != -1) {
             $this->load($this->id, $userbystring);
         }
-
-    }//end __construct()
+    }
 
 
     /**
@@ -86,22 +85,20 @@ class User
 
         // Check for any special variables that require "thinking".
         switch ($name) {
+            // we might have something else here that needs to be loaded
 
-        // we might have something else here that needs to be loaded
-
-        // Default back to loading a variable from a _data key otherwise.
-        default:
-            if (array_key_exists($name, $this->_data)) {
-                return $this->_data[$name];
-            }
-            break;
+            // Default back to loading a variable from a _data key otherwise.
+            default:
+                if (array_key_exists($name, $this->_data)) {
+                    return $this->_data[$name];
+                }
+                break;
         }
 
         // Output would have been returned by now, nullifying the function
         // from even getting to this point, so return null.
         return null;
-
-    }//end __get()
+    }
 
 
     /**
@@ -128,8 +125,7 @@ class User
                 $this->_datamod[] = $name;
             }
         }
-
-    }//end __set()
+    }
 
 
     /**
@@ -144,7 +140,7 @@ class User
      *
      * @access public
      */
-    public function load(int $userID, bool $userbystring=false): void
+    public function load(int $userID, bool $userbystring = false): void
     {
 
         // Get the user's row to load it into the object.
@@ -211,12 +207,12 @@ class User
         $this->characters = [];
         foreach ($getcharq->fetchAll() as $character) {
             $this->characters[$character['ID']] = new Character(
-                $this->_dbhandle, $character['ID']
+                $this->_dbhandle,
+                $character['ID']
             );
         }
         unset($getcharq);
-
-    }//end load()
+    }
 
     /**
      * Dynamic user row saving
@@ -235,33 +231,33 @@ class User
         if (count($this->_datamod) != 0) {
             foreach ($this->_datamod as $modkey) {
                 switch ($modkey) {
-                // Here would be a perfect place to set custom handlers
-                // for custom datatypes.
-                // By default, sort out data types by object type.
-                default:
-                    switch (gettype($this->_data[$modkey])) {
-                    // Booleans must be converted to 1's and 0's.
-                    case 'boolean':
-                        $updatepairs[] = $modkey;
-                        if ($this->_data[$modkey] == true) {
-                            $updatevalues[$modkey] = 1;
-                        } else {
-                            $updatevalues[$modkey] = 0;
+                    // Here would be a perfect place to set custom handlers
+                    // for custom datatypes.
+                    // By default, sort out data types by object type.
+                    default:
+                        switch (gettype($this->_data[$modkey])) {
+                            // Booleans must be converted to 1's and 0's.
+                            case 'boolean':
+                                $updatepairs[] = $modkey;
+                                if ($this->_data[$modkey] == true) {
+                                    $updatevalues[$modkey] = 1;
+                                } else {
+                                    $updatevalues[$modkey] = 0;
+                                }
+                                break;
+                                // Anything that is a number or a string is stored directly.
+                            case 'integer':
+                            case 'double':
+                            case 'float':
+                            case 'string':
+                                $updatepairs[]        = $modkey;
+                                $updatebinds[$modkey] = &$this->_data[$modkey];
+                                break;
                         }
                         break;
-                    // Anything that is a number or a string is stored directly.
-                    case 'integer':
-                    case 'double':
-                    case 'float':
-                    case 'string':
-                        $updatepairs[]        = $modkey;
-                        $updatebinds[$modkey] = &$this->_data[$modkey];
-                        break;
-                    }//end switch
-                    break;
-                }//end switch
-            }//end foreach
-        }//end if
+                }
+            }
+        }
 
         // Check if we have anything to submit.
         if (count($updatepairs) != 0) {
@@ -291,9 +287,8 @@ class User
 
             $updateuser->bindParam(':userid', $this->id);
             $updateuser->execute();
-        }//end if
-
-    }//end save()
+        }
+    }
 
     /**
      * Password validation
@@ -392,13 +387,13 @@ class User
 
         // Third, assemble the outgoing message...
         $mail_subject = "Overseer 2 Password Reset";
-        $mail_message = "Hello ".$this->username.",\n".
-            "You have requested a password reset on Overseer 2.\n".
-            "Your key is: " . $this->password_recovery . "\n".
-            "This should be entered on the page where it was requested.\n".
+        $mail_message = "Hello " . $this->username . ",\n" .
+            "You have requested a password reset on Overseer 2.\n" .
+            "Your key is: " . $this->password_recovery . "\n" .
+            "This should be entered on the page where it was requested.\n" .
             "Regards, The Overseer 2 Team\n";
-        $mail_headers = "From: Overseer 2 <noreply@overseer2.com>\n".
-            "Reply-To: noreply@overseer2.com\n".
+        $mail_headers = "From: Overseer 2 <noreply@overseer2.com>\n" .
+            "Reply-To: noreply@overseer2.com\n" .
             "X-Mailer: PHP/" . phpversion();
 
         // And last but not least, send the message!
@@ -407,5 +402,4 @@ class User
         // We got this far, so, we're good?
         return true;
     }
-
-}//end class
+}

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Overseer v2 PHP Class: Strifer
  *
@@ -14,7 +15,8 @@
  */
 
 namespace Overseer;
-use \PDO;
+
+use PDO;
 use Exception;
 
 /**
@@ -71,15 +73,15 @@ class Strifer
     public function __get(string $name): mixed
     {
         switch ($name) {
-        case "healthpercent":
-            return (($this->health / $this->maxhealth)*100);
-        case "energypercent":
-            return (($this->energy / $this->maxenergy)*100);
-        default:
-            if (array_key_exists($name, $this->_data)) {
-                return $this->_data[$name];
-            }
-            break;
+            case "healthpercent":
+                return (($this->health / $this->maxhealth) * 100);
+            case "energypercent":
+                return (($this->energy / $this->maxenergy) * 100);
+            default:
+                if (array_key_exists($name, $this->_data)) {
+                    return $this->_data[$name];
+                }
+                break;
         }
         return null;
     }
@@ -151,12 +153,11 @@ class Strifer
                 $convertedvalue = false;
             } else {
                 throw new Exception(
-                    'Non-boolean numeric value found in dbkey '.$dbkey.'.'
+                    'Non-boolean numeric value found in dbkey ' . $dbkey . '.'
                 );
             }
             $this->_data[$datakey] = $convertedvalue;
             unset($convertedvalue);
         }
     }
-
 }
