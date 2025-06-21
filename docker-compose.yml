@@ -48,6 +48,36 @@ services:
       - 9000:9000
     depends_on:
       - database-dev
+  
+  rust:
+    &rust
+    profiles:
+      - prod
+    restart: on-failure
+    build:
+      dockerfile: ./config/rust/Dockerfile.prod
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - database
+  
+  rust-dev:
+    <<: *rust
+    profiles:
+      - dev
+    build:
+      dockerfile: ./config/rust/Dockerfile.dev
+    volumes:
+      - ./php/:/var/www/html/
+      - ./vendor/:/var/www/html/vendor/
+    ports:
+      - 9000:9000
+    depends_on:
+      - database-dev
 
 volumes:
   db_data:
+  session_data:
