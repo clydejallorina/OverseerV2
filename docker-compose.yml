@@ -42,7 +42,8 @@ services:
     build:
       dockerfile: ./config/php/Dockerfile.dev
     volumes:
-      - .:/var/www/html/
+      - ./php/:/var/www/html/
+      - ./vendor/:/var/www/html/vendor/
     ports:
       - 9000:9000
     depends_on:
