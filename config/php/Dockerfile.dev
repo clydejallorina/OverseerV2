@@ -11,7 +11,9 @@ COPY ./config/apache/ports-dev.conf /etc/apache2/ports.conf
 RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
 
 # Copy project files
-COPY . /var/www/html/
+COPY ./php/ /var/www/html/
+COPY ./composer.json /var/www/html/composer.json
+COPY ./composer.lock /var/www/html/composer.lock
 
 # Run setup
 RUN apt-get update
