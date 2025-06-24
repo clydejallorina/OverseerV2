@@ -12,8 +12,6 @@ RUN echo "ServerName localhost:80" >> /etc/apache2/apache2.conf
 
 # Copy project files
 COPY ./php/ /var/www/html/
-COPY ./composer.json /var/www/html/composer.json
-COPY ./composer.lock /var/www/html/composer.lock
 
 # Run setup
 RUN apt-get update

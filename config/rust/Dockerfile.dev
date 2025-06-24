@@ -1,1 +1,20 @@
-FROM rust:1-87-bullseye
+FROM rust:1.87-bookworm
+
+ARG SQLX_OFFLINE="true"
+ARG DATABASE_URL
+
+# Prepare working folder
+RUN mkdir /rust/
+WORKDIR /rust/
+
+# Prepare Rust Source
+COPY ./rust/ /rust/
+
+# Prepare PHP Source
+RUN mkdir /php/
+COPY ./php/ /php/
+
+# TODO: Figure out how to pre-build so cargo run just runs instantly
+#       Issue is that sqlx wants a live connection to the server to run queries against
+
+CMD [ "cargo", "run" ]

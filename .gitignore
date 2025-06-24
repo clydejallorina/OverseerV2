@@ -10,3 +10,8 @@ composer.phar
 php/devtools/debuglog.txt
 php/devtools/cheatpolice.txt
 phpinfo.php
+
+/rust/target
+/rust/.sqlx
+
+.vscode
