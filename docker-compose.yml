@@ -27,6 +27,8 @@ services:
     restart: on-failure
     build:
       dockerfile: ./config/php/Dockerfile.prod
+    volumes:
+      - session_data:/var/www/sessions/
     env_file:
       - .env
     ports:
@@ -44,6 +46,7 @@ services:
     volumes:
       - ./php/:/var/www/html/
       - ./vendor/:/var/www/html/vendor/
+      - session_data:/var/www/sessions/
     ports:
       - 9000:9000
     depends_on:
@@ -58,6 +61,11 @@ services:
       dockerfile: ./config/rust/Dockerfile.prod
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=mysql://${DB_USERNAME}:${DB_PASSWORD}@database:3306/${DB_DATABASE}
+      - OVERSEER_ROOT=/php/
+    volumes:
+      - session_data:/.session/
     ports:
       - 80:80
       - 443:443
@@ -71,10 +79,14 @@ services:
     build:
       dockerfile: ./config/rust/Dockerfile.dev
     volumes:
-      - ./php/:/var/www/html/
-      - ./vendor/:/var/www/html/vendor/
+      - ./rust/:/rust/
+      - ./php/:/php/
+      - session_data:/.session/
+    environment:
+      - DATABASE_URL=mysql://${DB_USERNAME}:${DB_PASSWORD}@database-dev:3306/${DB_DATABASE}
+      - OVERSEER_ROOT=/php/
     ports:
-      - 9000:9000
+      - 8010:8010
     depends_on:
       - database-dev
 

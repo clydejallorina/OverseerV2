@@ -1,5 +1,9 @@
 FROM php:8.2-apache-bookworm
 
+# Setup sessions directory
+RUN mkdir /var/www/sessions/
+RUN chown -R www-data /var/www/sessions/
+
 # Setup composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
@@ -7,13 +11,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 COPY ./config/apache/apache2.conf /etc/apache2/apache2.conf
 COPY ./config/apache/ports-dev.conf /etc/apache2/ports.conf
 
+# Copy php.ini
+COPY ./config/php/dev-php.ini /usr/local/etc/php/php.ini
+
 # Ensure that we're listening in on the correct server name / port
 RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
 
 # Copy project files
 COPY ./php/ /var/www/html/
-COPY ./composer.json /var/www/html/composer.json
-COPY ./composer.lock /var/www/html/composer.lock
+COPY ./config/php/setup.sh /tmp/setup.sh
 
 # Run setup
 RUN apt-get update
@@ -22,4 +28,4 @@ RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install mysqli
 RUN composer install
 
-CMD ["sh", "./config/php/setup.sh"]
+CMD ["sh", "/tmp/setup.sh"]
