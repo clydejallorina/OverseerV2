@@ -15,7 +15,6 @@ RUN mkdir /php/
 COPY ./php/ /php/
 
 # Setup environment
-RUN cargo install sqlx-cli
 RUN cargo build --verbose
 
 CMD [ "cargo", "run" ]
