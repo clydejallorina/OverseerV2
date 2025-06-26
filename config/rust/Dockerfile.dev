@@ -14,7 +14,8 @@ COPY ./rust/ /rust/
 RUN mkdir /php/
 COPY ./php/ /php/
 
-# TODO: Figure out how to pre-build so cargo run just runs instantly
-#       Issue is that sqlx wants a live connection to the server to run queries against
+# Setup environment
+RUN cargo install sqlx-cli
+RUN cargo build --verbose
 
 CMD [ "cargo", "run" ]

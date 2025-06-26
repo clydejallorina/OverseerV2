@@ -1,6 +1,7 @@
 FROM rust:1.87-bookworm
 
-ARG SQLX_OFFLINE=true
+ARG SQLX_OFFLINE="true"
+ARG DATABASE_URL
 
 # Prepare working folder
 RUN mkdir /rust/
@@ -15,7 +16,6 @@ COPY ./php/ /php/
 
 # Setup environment
 RUN cargo install sqlx-cli
-RUN cargo sqlx prepare
 RUN cargo build --verbose
 
 CMD [ "cargo", "run" ]

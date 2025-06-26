@@ -12,6 +12,5 @@ php/devtools/cheatpolice.txt
 phpinfo.php
 
 /rust/target
-/rust/.sqlx
 
 .vscode
