@@ -1,5 +1,9 @@
 FROM php:8.2-apache-bookworm
 
+# Setup sessions directory
+RUN mkdir /var/www/sessions/
+RUN chown -R www-data /var/www/sessions/
+
 # Setup composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
@@ -7,11 +11,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 COPY ./config/apache/apache2.conf /etc/apache2/apache2.conf
 COPY ./config/apache/ports-prod.conf /etc/apache2/ports.conf
 
+# Copy php.ini
+COPY ./config/php/prod-php.ini /usr/local/etc/php/php.ini
+
 # Ensure that we're listening in on the correct server name / port
 RUN echo "ServerName localhost:80" >> /etc/apache2/apache2.conf
 
 # Copy project files
-COPY . /var/www/html/
+COPY ./php/ /var/www/html/
 
 # Run setup
 RUN apt-get update

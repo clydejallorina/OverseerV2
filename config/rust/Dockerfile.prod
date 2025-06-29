@@ -1,0 +1,20 @@
+FROM rust:1.87-bookworm
+
+ARG SQLX_OFFLINE="true"
+ARG DATABASE_URL
+
+# Prepare working folder
+RUN mkdir /rust/
+WORKDIR /rust/
+
+# Prepare Rust Source
+COPY ./rust/ /rust/
+
+# Prepare PHP Source
+RUN mkdir /php/
+COPY ./php/ /php/
+
+# Setup environment
+RUN cargo build --verbose
+
+CMD [ "cargo", "run" ]

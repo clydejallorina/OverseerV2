@@ -2,10 +2,15 @@ phpmyadmin
 .env
 composer.phar
 /vendor/
+/php/vendor/
 
 *~
 \#*\#
 
-/devtools/debuglog.txt
-/devtools/cheatpolice.txt
+php/devtools/debuglog.txt
+php/devtools/cheatpolice.txt
 phpinfo.php
+
+/rust/target
+
+.vscode
