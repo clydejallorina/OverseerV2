@@ -9,8 +9,13 @@
 	}
 
 	@php_routes expression {path}.endsWith(".php") || {path} == "/"
+	@static_routes expression {path}.endsWith(".css") || {path}.endsWith(".js") || {path}.endsWith(".png") || {path}.endsWith(".jpg") || {path}.endsWith(".gif") || {path}.endsWith(".svg") || {path}.endsWith(".ico") || {path}.endsWith(".ttf")
 
 	reverse_proxy @php_routes {$PHP_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+
+	reverse_proxy @static_routes {$PHP_URI} {
 		header_up X-Real-IP {client_ip}
 	}
 
