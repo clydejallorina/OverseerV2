@@ -1,0 +1,25 @@
+{$SITE_HOSTNAME:http://localhost:8000} {
+	log {
+		format json
+		output file /var/log/access.log {
+			roll_size 2gb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+
+	@php_routes expression {path}.endsWith(".php") || {path} == "/"
+	@static_routes expression {path}.endsWith(".css") || {path}.endsWith(".js") || {path}.endsWith(".png") || {path}.endsWith(".jpg") || {path}.endsWith(".gif") || {path}.endsWith(".svg") || {path}.endsWith(".ico") || {path}.endsWith(".ttf")
+
+	reverse_proxy @php_routes {$PHP_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+
+	reverse_proxy @static_routes {$PHP_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+
+	reverse_proxy {$RUST_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+}
