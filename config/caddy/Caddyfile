@@ -1,0 +1,22 @@
+{$SITE_HOSTNAME:http://localhost:8000} {
+	log {
+		format json
+		output file /var/log/access.log {
+			roll_size 2gb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+
+	# TODO: Make this Regular Expression easily editable from the Rust side so this doesn't need
+	#       to be edited every time we migrate something from PHP to Rust
+	# https://regexr.com/8fsh2
+	@rust_routes path_regexp ^\/((sse)|(overview)|(character)|(waste-time))
+	reverse_proxy @rust_routes {$RUST_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+
+	reverse_proxy {$PHP_URI} {
+		header_up X-Real-IP {client_ip}
+	}
+}
