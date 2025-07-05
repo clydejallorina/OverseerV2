@@ -8,15 +8,13 @@
 		}
 	}
 
-	# TODO: Make this Regular Expression easily editable from the Rust side so this doesn't need
-	#       to be edited every time we migrate something from PHP to Rust
-	# https://regexr.com/8fsh2
-	@rust_routes path_regexp ^\/((sse)|(overview)|(character)|(waste-time))
-	reverse_proxy @rust_routes {$RUST_URI} {
+	@php_routes expression {path}.endsWith(".php") || {path} == "/"
+
+	reverse_proxy @php_routes {$PHP_URI} {
 		header_up X-Real-IP {client_ip}
 	}
 
-	reverse_proxy {$PHP_URI} {
+	reverse_proxy {$RUST_URI} {
 		header_up X-Real-IP {client_ip}
 	}
 }
