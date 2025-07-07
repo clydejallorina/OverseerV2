@@ -6,6 +6,8 @@ services:
       - prod
     build:
       dockerfile: ./config/mysql/Dockerfile
+      args:
+        - MYSQL_DATABASE=${DB_DATABASE}
     environment:
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
