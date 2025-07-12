@@ -226,11 +226,14 @@ while ($i <= $n) {
 			case "POWERLOSS": //A special status effect that is applied during the strife round to reduce power without
 							  //affecting the target's remaining attacks this round.
 				$strifers[$i]['power'] -= intval($currentstatus[2]);
+				/*$strifers[$i]['bonuses'] .= "POWER:0:" . ($currentstatus[2]*-1) . "|"; // It add the negative bonus to the database, so instead of add power, it substracts - Copia*/
 				$removed = true; //Paranoia. Client-side this status effect doesn't exist! We don't want it to ever try to appear.
+				break;
 			case "POWERGAIN": //A special status effect that is applied during the strife round to increase power without
 							  //affecting the target's remaining attacks this round.
 				$strifers[$i]['bonuses'] .= "POWER:0:" . $currentstatus[2] . "|";
 				$removed = true; //Paranoia. Client-side this status effect doesn't exist! We don't want it to ever try to appear.
+				break;
 			default:
 				break;
 		}

@@ -122,6 +122,11 @@ function displayBonus($bonustr) {
 			switch ($currentbonus[0]) {
 				case "POWER":
 					echo "Power boost. ";
+					/*if($currentbonus[2] < "0"){ // If the value of the bonus is negative, it will display there's a decrease
+						echo "Power decrease. ";
+						$currentbonus[2]*=-1;
+					}
+					else echo "Power boost. "; // Else, it will show there's a Power boost - Copia */
 					break;
 				case "OFFENSE":
 					echo "Offense boost. ";
