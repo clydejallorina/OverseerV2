@@ -1,53 +1,64 @@
 <?php
 
 // The magical error handling code handler of the future.
-function error_handler($errorNumber, $message, $errfile, $errline) {
-	global $errorlog;
-	switch ($errorNumber) {
-		case E_ERROR: $errorLevel = 'Error'; break;
-		case E_WARNING: $errorLevel = 'Warning'; break;
-		case E_NOTICE: $errorLevel = 'Notice'; break;
-		default: $errorLevel = "Undefined ($errorNumber)";
-	}
-	$errorline = '<b>' . $errorLevel . '</b>: ' . $message . ' in <b>'.$errfile . '</b> on line <b>' . $errline . "</b><br>\n";
-	if (!str_contains($errorline, "debuglog"))
-		logDebugMessage($errorline);
-	if (!isset($errorlog)) $errorlog = "<h1>PHP Errors:</h1>\n";
-	$errorlog .= $errorline;
+function error_handler($errorNumber, $message, $errfile, $errline): void
+{
+    global $errorlog;
+    switch ($errorNumber) {
+        case E_ERROR: $errorLevel = 'Error';
+            break;
+        case E_WARNING: $errorLevel = 'Warning';
+            break;
+        case E_NOTICE: $errorLevel = 'Notice';
+            break;
+        default: $errorLevel = "Undefined ($errorNumber)";
+    }
+    $errorline = '<b>' . $errorLevel . '</b>: ' . $message . ' in <b>'.$errfile . '</b> on line <b>' . $errline . "</b><br>\n";
+    if (!str_contains($errorline, "debuglog")) {
+        logDebugMessage($errorline);
+    }
+    if (!isset($errorlog)) {
+        $errorlog = "<h1>PHP Errors:</h1>\n";
+    }
+    $errorlog .= $errorline;
 }
 
 set_error_handler('error_handler');
 register_shutdown_function(function () {
-	$error = error_get_last();
-	if ($error !== null)
+    $error = error_get_last();
+    if ($error !== null) {
         error_handler($error["type"], $error["message"], $error["file"], $error["line"]);
+    }
 });
 
 // Start up a session and see if we have a player, otherwise bounce them to index.
-session_start(); 
-if (empty($_SESSION['username']) or empty($_SESSION['character'])) { 
+session_start();
+if (empty($_SESSION['username']) or empty($_SESSION['character'])) {
     if (!stripos($_SERVER['REQUEST_URI'], 'resetpass.php') || !stripos($_SERVER['REQUEST_URI'], 'changelog.php')) {
-        header('Location: /'); 
-        exit(); 
+        header('Location: /');
+        exit();
     }
 }
 
 // Fantastic code for tracking page loading time
-$loadtime = explode(' ', microtime()); $loadtime = $loadtime[1] + $loadtime[0];
+$loadtime = explode(' ', microtime());
+$loadtime = $loadtime[1] + $loadtime[0];
 
 // All of our required things for running this show
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/autoload.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/global_functions.php';
 // Nasty hack to enable simultaneous MySQL and PDO.
-$dbtype="PDO"; require($_SERVER['DOCUMENT_ROOT'] . '/inc/database.php');
-unset($dbtype); require($_SERVER['DOCUMENT_ROOT'] . '/inc/database.php');
+$dbtype = "PDO";
+require($_SERVER['DOCUMENT_ROOT'] . '/inc/database.php');
+unset($dbtype);
+require($_SERVER['DOCUMENT_ROOT'] . '/inc/database.php');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/pageload.php';
 
 // Load striferow
 if ($charrow['dreamingstatus'] == "Awake") {
-	$sid = $charrow['wakeself']; //$sid for strife ID
+    $sid = $charrow['wakeself']; //$sid for strife ID
 } else {
-	$sid = $charrow['dreamself'];
+    $sid = $charrow['dreamself'];
 }
 $striferesult = mysqli_query($connection, "SELECT * FROM `Strifers` WHERE `Strifers`.`ID` = $sid LIMIT 1;");
 $striferow = mysqli_fetch_array($striferesult);
@@ -66,20 +77,22 @@ if ($maint != 0 && $accrow['modlevel'] < 99) { ?>
 	<title> Overseer v2</title>
 	<h1> Overseer v2 is currently 
 <?php
-	if ($maint == 1) {
-		echo 'in VIP Mode!</h1><p>This means that we\'re almost done, and just testing a few things.</p>';
-	} elseif ($maint == 2) {
-		echo 'down for maintenance!</h1>';
-	} ?>
+    if ($maint == 1) {
+        echo 'in VIP Mode!</h1><p>This means that we\'re almost done, and just testing a few things.</p>';
+    } elseif ($maint == 2) {
+        echo 'down for maintenance!</h1>';
+    } ?>
 	<p>For more info, and live updates, feel free to join the official <a href="https://discord.gg/NgcS29n">Discord server</a> using either your browser, or the app! </p> <?php
-	exit();
-	}
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Overseer v2<?php if (!empty($pagetitle)) echo(" - ".$pagetitle); ?></title>
+    <title>Overseer v2<?php if (!empty($pagetitle)) {
+        echo(" - ".$pagetitle);
+    } ?></title>
     <meta name="description" content="A Homestuck-based online game.">
     <link rel="stylesheet" href="/css/overseer.css">
     <style>
@@ -95,7 +108,8 @@ if ($maint != 0 && $accrow['modlevel'] < 99) { ?>
       </div>
       <div id="content-container">
         <div id="content-header-container">
-          <div id="content-header"><img id="pageimg" src="<?php echo($headericon ?? '/images/header/spirograph.png');?>"> <?php $title=$pagetitle ?? ucfirst(pathinfo($_SERVER['PHP_SELF'], PATHINFO_FILENAME)); echo('<div id="content-header-text">' . $title  .'</div>'); ?></div>
+          <div id="content-header"><img id="pageimg" src="<?php echo($headericon ?? '/images/header/spirograph.png');?>"> <?php $title = $pagetitle ?? ucfirst(pathinfo($_SERVER['PHP_SELF'], PATHINFO_FILENAME));
+echo('<div id="content-header-text">' . $title  .'</div>'); ?></div>
         </div>
         <div id="content-area">
 <?php // Content goes here!!

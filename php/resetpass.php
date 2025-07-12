@@ -10,7 +10,7 @@ if (!isset($_POST['email']) && !isset($_POST['resetkey']) && !isset($_POST['pass
         <input type="text" id="email" name="email" placeholder="Email Address">
         <input type="submit">
     </form>
-<?php    
+<?php
 } elseif (!empty($_POST['email'])) {
     $email = mysqli_escape_string($connection, $_POST['email']);
     $resetKey = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 32); // Generates a key 32 characters long
@@ -28,7 +28,7 @@ if (!isset($_POST['email']) && !isset($_POST['resetkey']) && !isset($_POST['pass
         <input type='text' id='resetkey' name='resetkey' autofocus>
         <input type='submit'>
     </form>";
-    
+
 } elseif (isset($_POST['resetkey']) && !isset($_POST['password'])) {
     $resetkey = mysqli_escape_string($_POST['resetkey']);
     $resetQuery = mysqli_query($connection, "SELECT * FROM `Users` WHERE `password_recovery` = '$resetkey' LIMIT 1;");
@@ -49,7 +49,7 @@ if (!isset($_POST['email']) && !isset($_POST['resetkey']) && !isset($_POST['pass
 } elseif (isset($_POST['password'])) {
     $password = mysqli_escape_string($connection, $_POST['password']);
     $confirmpass = mysqli_escape_string($connection, $_POST['confirmpass']);
-    if ($password == $confirmpass && !empty($_POST['resetkey']) && $_POST['resetkey']!=NULL) {
+    if ($password == $confirmpass && !empty($_POST['resetkey']) && $_POST['resetkey'] != null) {
         $enterpass = password_hash($password, PASSWORD_DEFAULT);
         mysqli_query($connection, "UPDATE `Users` SET `password` = '$enterpass' WHERE `password_recovery` = '". mysqli_real_escape_string($connection, $_POST['resetkey']) ."' LIMIT 1;");
         echo 'Password updated!';

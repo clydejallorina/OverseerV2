@@ -1,7 +1,8 @@
 <?php
+
 require_once "header.php";
 if (empty($_SESSION['username'])) {
-	echo '
+    echo '
 	<form id="login" action="login.php" method="post">
 	Username: <input id="username" maxlength="100" name="username" type="text" />
 	<br />
@@ -33,7 +34,6 @@ if (empty($_SESSION['username'])) {
 	<br />
 	';
 } else {
-	echo "You are currently logged in as $_SESSION[username]<br />";
+    echo "You are currently logged in as $_SESSION[username]<br />";
 }
 require_once "footer.php";
-?>

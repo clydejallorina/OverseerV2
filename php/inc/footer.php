@@ -1,35 +1,42 @@
 <br>
 <?php
 if (!empty($_SESSION['inv']) && !empty($_SESSION['imeta'])) {
-	$newinv = mysqli_real_escape_string($connection, implode("|", $_SESSION['inv']) . "|");
-	$newmeta = mysqli_real_escape_string($connection, implode("|", $_SESSION['imeta']) . "|");
+    $newinv = mysqli_real_escape_string($connection, implode("|", $_SESSION['inv']) . "|");
+    $newmeta = mysqli_real_escape_string($connection, implode("|", $_SESSION['imeta']) . "|");
 } else {
-	$newinv = "";
-	$newmeta = "";
+    $newinv = "";
+    $newmeta = "";
 }
 if ($newinv != $charrow['inventory'] || $newmeta != $charrow['metadata']) { //inventory was changed on this page, update it in the database
-	mysqli_query($connection, "UPDATE Characters SET inventory = '$newinv', metadata = '$newmeta' WHERE ID = $cid");
+    mysqli_query($connection, "UPDATE Characters SET inventory = '$newinv', metadata = '$newmeta' WHERE ID = $cid");
 }
 
 checkNotifications($charrow);
 $symbol = "'/" . $me->symbol . "'";
-$background='no';
-if ($charrow['dreamingstatus']=='Prospit') $background='prospit';
-elseif ($charrow['dreamingstatus']=='Derse') $background='derse';
+$background = 'no';
+if ($charrow['dreamingstatus'] == 'Prospit') {
+    $background = 'prospit';
+} elseif ($charrow['dreamingstatus'] == 'Derse') {
+    $background = 'derse';
+}
 ?>
-			</div><?php // id: content-area ?>
+			</div><?php // id: content-area?>
 			<footer>
 				<!-- <?php
-					if (!empty($_SESSION['character'])) {
-						echo "Fatigue($me->wakefatigue) Dreamself fatigue($me->dreamfatigue)<br>";
-						if ($me->wakefatigue > 1025) echo "Waking fatigue penalty: " . (($me->wakefatigue - 1025) / 10) . "%<br>";
-						if ($me->dreamfatigue > 1025) echo "Dreamself fatigue penalty: " . (($me->dreamfatigue - 1025) / 10) . "%<br>";
-					}
-				?> -->
+                    if (!empty($_SESSION['character'])) {
+                        echo "Fatigue($me->wakefatigue) Dreamself fatigue($me->dreamfatigue)<br>";
+                        if ($me->wakefatigue > 1025) {
+                            echo "Waking fatigue penalty: " . (($me->wakefatigue - 1025) / 10) . "%<br>";
+                        }
+                        if ($me->dreamfatigue > 1025) {
+                            echo "Dreamself fatigue penalty: " . (($me->dreamfatigue - 1025) / 10) . "%<br>";
+                        }
+                    }
+?> -->
 				Page generated in <span id="pagegentime">???</span> seconds and loaded in <span id="pageloadtime"><span style="color: blue;">calculating </span></span>ms.
 			</footer>
-		</div><?php // id: content-container ?>
-	</div><?php // id: layout-container ?>
+		</div><?php // id: content-container?>
+	</div><?php // id: layout-container?>
 	<svg width=400 height=220 style="position: fixed; left: 0px; top: 0px; pointer-events: none;">
 		<defs>
 			<mask id="maskedtext">
@@ -53,28 +60,31 @@ elseif ($charrow['dreamingstatus']=='Derse') $background='derse';
 	<script type="text/javascript" src="/js/jquery.tooltipster.min.js"></script>
 
 	<?php
-	//announcement code
+    //announcement code
 
-	$system = mysqli_query($connection, "SELECT * from `System`;");
-	$systemarray = mysqli_fetch_array($system);
-	$announcements = explode("|", urldecode($systemarray['announcements']));
-	$once = false;
-	if($announcements[0]!=''){
-		array_pop($announcements);
-		foreach($announcements as $announcement){
-			$announce = explode("@", $announcement);
-			if(strtotime("now")>$announce[1] && strtotime("now")<$announce[2] && !$once){
-				echo '<div id="announcement-container">
+    $system = mysqli_query($connection, "SELECT * from `System`;");
+$systemarray = mysqli_fetch_array($system);
+$announcements = explode("|", urldecode($systemarray['announcements']));
+$once = false;
+if ($announcements[0] != '') {
+    array_pop($announcements);
+    foreach ($announcements as $announcement) {
+        $announce = explode("@", $announcement);
+        if (strtotime("now") > $announce[1] && strtotime("now") < $announce[2] && !$once) {
+            echo '<div id="announcement-container">
 				<div class="nano" id ="announcement">
 				<div class="nano-content"><strong><center>ANNOUNCEMENTS</center></strong>';
-				$once=true;
-			}
-			if(strtotime("now")>$announce[1]  && strtotime("now")<$announce[2])
-				echo stripcslashes($announce[0]) . '<br>';
-		}
-		if($once) echo '</div></div></div>';
-	}
-	?>
+            $once = true;
+        }
+        if (strtotime("now") > $announce[1]  && strtotime("now") < $announce[2]) {
+            echo stripcslashes($announce[0]) . '<br>';
+        }
+    }
+    if ($once) {
+        echo '</div></div></div>';
+    }
+}
+?>
 
 
 	<div id="avatar" style="background: url(<?php echo  $symbol; ?>) no-repeat center center, white;"></div>
@@ -208,16 +218,19 @@ elseif ($charrow['dreamingstatus']=='Derse') $background='derse';
 	<script> $(".nano").nanoScroller(); </script>
 
 	<script type="text/javascript">
-		document.getElementById('pagegentime').innerHTML = '<?php $loadfinishtime = explode(' ', microtime()); $loadfinishtime = $loadfinishtime[1] + $loadfinishtime[0]; echo round(($loadfinishtime - $loadtime), 4);?>';
+		document.getElementById('pagegentime').innerHTML = '<?php $loadfinishtime = explode(' ', microtime());
+$loadfinishtime = $loadfinishtime[1] + $loadfinishtime[0];
+echo round(($loadfinishtime - $loadtime), 4);?>';
 		window.onload = function () { setTimeout( function () { document.getElementById('pageloadtime').innerHTML = (performance.timing.loadEventEnd - performance.timing.requestStart); }, 1000) }
 	</script>
-<?php 
+<?php
 // Save the character object.  Does nothing if there is nothing changed.
 $me->save();
 
 // More of this epic fancy error code handler stuff.
-if (isset($errorlog) && explode(":", $_SERVER['HTTP_HOST'])[0] == "localhost")
-	echo '<div style="background-color: #F88; padding: 5px; margin: 10px; border-radius: 8px;">' . $errorlog . '</div>';
+if (isset($errorlog) && explode(":", $_SERVER['HTTP_HOST'])[0] == "localhost") {
+    echo '<div style="background-color: #F88; padding: 5px; margin: 10px; border-radius: 8px;">' . $errorlog . '</div>';
+}
 require_once "bugcatcher.php"; ?>
 	</body>
 </html>

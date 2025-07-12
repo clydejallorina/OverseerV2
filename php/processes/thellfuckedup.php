@@ -2,11 +2,11 @@
 
 # "Live database - OverseerDev"
 
-$live = mysqli_connect("localhost","thellfuckedup","hereallydid","OverseerDev");
+$live = mysqli_connect("localhost", "thellfuckedup", "hereallydid", "OverseerDev");
 
 # "Backup Database - OverseerBak"
 
-$backup = mysqli_connect("localhost","thellfuckedup2","hereallydid","OverseerBak");
+$backup = mysqli_connect("localhost", "thellfuckedup2", "hereallydid", "OverseerBak");
 
 $liveRows = mysqli_query($live, "SELECT * FROM `Users`;");
 $backupRows = mysqli_query($backup, "SELECT * FROM `Users`;");
@@ -21,6 +21,6 @@ while ($liveRow = mysqli_fetch_assoc($liveRows)) {
         echo $n.'. Restored '.$liveRow['username'].'\'s password.<br>';
         $n++;
     }
-    
+
 }
-    echo 'Restored '.$n.' passwords. Don\'t fuck up next time.';
+echo 'Restored '.$n.' passwords. Don\'t fuck up next time.';

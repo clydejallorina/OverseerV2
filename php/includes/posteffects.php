@@ -1,4 +1,5 @@
 <?php
+
 $i = 1;
 while ($i <= $n) {
 	//Check out EOT effects in the status field here
@@ -389,272 +390,311 @@ $gelchance = 15; //% chance of the first health gel dropping, to be divided by 2
 $topgel = 3; //max number of dropped gels
 $healthfraction = 10; //top% of health to be restored per gel unit
 $toheal = 0; //to be applied later
-$starthealth=$striferow['health'];
+$starthealth = $striferow['health'];
 while ($i <= $n) {
-	if ($strifers[$i]['health'] > $strifers[$i]['maxhealth']) $strifers[$i]['health'] = $strifers[$i]['maxhealth']; //Ensure strifer is not above their maximum
-	if ($strifers[$i]['power'] > $strifers[$i]['maxpower']) $strifers[$i]['power'] = $strifers[$i]['maxpower']; //Also ensure they're not above their max power
-	if ($strifers[$i]['power'] < 0) $strifers[$i]['power'] = 0; //Power should not drop below 0.
-	if ($strifers[$i]['health'] <= 0) { //This strifer has been KOed
-		$strifers[$i]['health'] = 1; //Set their health to 1 immediately so nothing dumb happens.
-		if ($strifers[$i]['owner'] != 0 && $strifers[$i]['aspect'] != "") { //This strifer is a player character!
-			//Set character details about that player being KOed here. (Set them to being down, etc)
-			setAchievement($charrow, 'ko'); //ko achievement
-			$koresult = mysqli_query($connection, "SELECT * FROM Characters WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
-			$korow = mysqli_fetch_array($koresult);
-			if (strpos($strifers[$i]['description'], "dreamself") !== false) { //Dreamself was KOed
-				$newfatigue = $korow['dreamfatigue'];// + 100;
-				mysqli_query($connection, "UPDATE Characters set dreamfatigue = $newfatigue WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
-			} else { //Waking self was KOed
-				$newfatigue = $korow['wakefatigue'];// + 100;
-				$olddungeonrow = $korow['olddungeonrow'];
-				$olddungeoncol = $korow['olddungeoncol'];
-				mysqli_query($connection, "UPDATE Characters set wakefatigue = $newfatigue, dungeonrow = $olddungeonrow, dungeoncol = $olddungeoncol WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
-			}
-			if ($strifers[$i]['leader'] != 0) { //This strifer was the leader! We'll need to try and find another one
-				$j = 0;
-				$anotherplayer = false;
-				while ($j <= $n && !$anotherplayer) {
-					if ($strifers[$j]['side'] == $playerside && $strifers[$j]['Aspect'] != "") { //Found one
-						$strifers[$j]['leader'] = 1;
-						$anotherplayer = true;
-					}
-					$j++;
-				}
-				if (!$anotherplayer) { //That was the last player character in the strife on that side. Remove that side from the strife.
-					$j = 0;
-					while ($j <= $n) {
-						if ($strifers[$j]['side'] == $playerside) {
-							$strifers[$j] = endStrife($strifers[$j]);
-						}
-						$j++;
-					}
-				}
-			}
-			$strifers[$i] = endStrife($strifers[$i]);
-		} elseif ($strifers[$i]['side'] == $playerside) { //An ally has been slain
-			$health = $strifers[$i]['maxhealth'];
-			$energy = $strifers[$i]['maxenergy'];
-			$power = $strifers[$i]['maxpower'];
-			$strifers[$i]['health'] = $health;
-			$strifers[$i]['energy'] = $energy;
-			$strifers[$i]['power'] = $power;
-			mysqli_query($connection, "UPDATE `Strifers` SET `health` = $health, `energy` = $energy, `power` = $power WHERE `Strifers`.`ID` = " . $strifers[$i]['ID'] . " LIMIT 1;");
-			$strifers[$i] = endStrife($strifers[$i]);
-			//Code to handle allies being KOed goes in here.
-		} else { //An enemy has been slain
-			$enemyslain = true;
-			if ($strifers[$i]['owner'] == 0) { //The enemy is an NPC. Give loot to the current player and remove their strife row. Also report their death.
-				//On-death effects go here. Just loot for now. NOTE - Loot goes to the person executing the resolution i.e. the leader!
-				//Better hope they know how to share.
-				$output .=  "The ";
-				if ($strifers[$i]['grist'] != "None") $output .=  $strifers[$i]['grist'] . " ";
-				$output .=  $strifers[$i]['name'] . " is defeated!<br />";
-				if($strifers[$i]['name']=="Kraken") setAchievement($charrow,'dungeon1');
-				if($strifers[$i]['name']=="Hekatonchire") setAchievement($charrow,'dungeon2');
-				if($strifers[$i]['name']=="Lich Queen") setAchievement($charrow,'dungeon3');
-				if($strifers[$i]['name']=="Construct New Building"){
-					$moonprince = $moonprince+1;
-				}
-				if($strifers[$i]['name']=="Royal Assassin"){
-					$moonprince = $moonprince+1;
-				}
-				$ondeath = explode('|', $strifers[$i]['ondeath']); //Expand out the status string so we can look at it
-				$j = 0;
-				$enemynumber+=1;
-				$lootstr = "It drops: ";
-				while(!empty($ondeath[$j])) { //We are looking at an on-death effect
-					$current = explode(":", $ondeath[$j]);
-					switch ($current[0]) { //Look for what effect this is
-						case "GRIST": //Format: GRIST:<Grist type>:<Amount>:<Chance of this drop>|
-							if (rand(0,100) <= intval($current[3])) {
-								$charrow['grists'] = modifyGrist($charrow['grists'], $current[1], intval($current[2]));
-								$lootstr .= $current[2] . "<img src='" . gristImage($current[1]) . "' title='$current[1]' width='24' height='24'>, ";
-							}
-							break;
-						case "PRISMATICGRIST": //Format: PRISMATICGRIST:<Amount>|
-							$charrow['grists'] = modifyGrist($charrow['grists'], "Polychromite", intval($current[1]));
-							$charrow['grists'] = modifyGrist($charrow['grists'], "Rainbow", intval($current[1]));
-							$charrow['grists'] = modifyGrist($charrow['grists'], "Plasma", intval($current[1]));
-							$charrow['grists'] = modifyGrist($charrow['grists'], "Opal", intval($current[1]));
-							$lootstr .= $current[1] . "<img src='/images/grist/Polychromite.gif' title='Polychromite' width='24' height='24'>, ";
-							$lootstr .= $current[1] . "<img src='/images/grist/Rainbow.gif' title='Rainbow' width='24' height='24'>, ";
-							$lootstr .= $current[1] . "<img src='/images/grist/Plasma.gif' title='Plasma' width='24' height='24'>, ";
-							$lootstr .= $current[1] . "<img src='/images/grist/Opal.gif' title='Opal' width='24' height='24'>, ";
-							break;
-						case "BOONDOLLARS": //Format: BOONDOLLARS:<minimum>:<maximum>|
-							$boonies = intval($current[1]) + floor((rand(0,1000) * (intval($current[2]) - intval($current[1]))) / 1000);
-							$charrow['boondollars'] += $boonies;
-							$lootstr .= "$boonies Boondollars, ";
-							break;
-						case "ITEM": //Format: ITEM:<ID>:<Metadata>|. Metadata separated by @'s. addItem adds the "1" by default, so metadata can be empty.
-							require_once "includes/additem.php"; //Necessary for item drops
-							$metadata = str_replace("@", ":", $current[2]);
-							$itemcreate = addItem($charrow,intval($current[1]),$metadata);
-							$itemname = itemName($current[1], $connection);
-							if ($itemcreate) { //Item creation succeeded
-								$lootstr .= $itemname . "(which you captchalogue), ";
-							} else {
-								setAchievement($charrow, 'itemfull'); //achievement
-								$lootstr .= $itemname . "(which you don't have room for so you leave it behind), ";
-							}
-							break;
-						case "BATTLEFIELD": //Format: BATTLEFIELD:<value>|. Enemy is part of the Dersite army, and killing them weakens it.
-							$sessionresult = mysqli_query($connection, "SELECT battlefield_power FROM Sessions WHERE Sessions.ID = " . $charrow['session'] . " LIMIT 1;");
-							$sessionrow = mysqli_fetch_array($sessionresult);
-							sumStat($charrow, 'battlefield',intval($current[1]));
-							$sessionrow['battlefield_power'] -= intval($current[1]);
-							if ($sessionrow['battlefield_power'] < 0) $sessionrow['battlefield_power'] = 0;
-							mysqli_query($connection, "UPDATE Sessions SET battlefield_power = " . $sessionrow['battlefield_power'] . " WHERE Sessions.ID = " . $charrow['session'] . " LIMIT 1;");
-							$lootstr .= 'the power of the Dersite Army (where by "drops" we mean "decreases", and by that we mean not at all because the Black King hasn\'t been awoken by the "devs" yet, whatever that means), ';
-							break;
-						case "SPECIAL": //Miscellaneous on-death events.
-							switch ($current[1]) {
-								case "Denizen":
-									setAchievement($charrow, 'denizen');
-									notifySession($charrow, $charrow['name'] . " has defeated their Denizen!");
-									$lootstr = "You have defeated your Denizen, granting you access to the Battlefield.<br />";
-									mysqli_query($connection, "UPDATE `Characters` SET `denizendown` = 1 WHERE `Characters`.`ID` = " . $charrow['ID'] . " LIMIT 1;");
-									break;
-								default:
-									break;
-							}
-							break;
-						default:
-							break;
-					}
-					$j++;
-				}
-				//HEALTH GEL CODE
+    if ($strifers[$i]['health'] > $strifers[$i]['maxhealth']) {
+        $strifers[$i]['health'] = $strifers[$i]['maxhealth'];
+    } //Ensure strifer is not above their maximum
+    if ($strifers[$i]['power'] > $strifers[$i]['maxpower']) {
+        $strifers[$i]['power'] = $strifers[$i]['maxpower'];
+    } //Also ensure they're not above their max power
+    if ($strifers[$i]['power'] < 0) {
+        $strifers[$i]['power'] = 0;
+    } //Power should not drop below 0.
+    if ($strifers[$i]['health'] <= 0) { //This strifer has been KOed
+        $strifers[$i]['health'] = 1; //Set their health to 1 immediately so nothing dumb happens.
+        if ($strifers[$i]['owner'] != 0 && $strifers[$i]['aspect'] != "") { //This strifer is a player character!
+            //Set character details about that player being KOed here. (Set them to being down, etc)
+            setAchievement($charrow, 'ko'); //ko achievement
+            $koresult = mysqli_query($connection, "SELECT * FROM Characters WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
+            $korow = mysqli_fetch_array($koresult);
+            if (strpos($strifers[$i]['description'], "dreamself") !== false) { //Dreamself was KOed
+                $newfatigue = $korow['dreamfatigue'];// + 100;
+                mysqli_query($connection, "UPDATE Characters set dreamfatigue = $newfatigue WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
+            } else { //Waking self was KOed
+                $newfatigue = $korow['wakefatigue'];// + 100;
+                $olddungeonrow = $korow['olddungeonrow'];
+                $olddungeoncol = $korow['olddungeoncol'];
+                mysqli_query($connection, "UPDATE Characters set wakefatigue = $newfatigue, dungeonrow = $olddungeonrow, dungeoncol = $olddungeoncol WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
+            }
+            if ($strifers[$i]['leader'] != 0) { //This strifer was the leader! We'll need to try and find another one
+                $j = 0;
+                $anotherplayer = false;
+                while ($j <= $n && !$anotherplayer) {
+                    if ($strifers[$j]['side'] == $playerside && $strifers[$j]['Aspect'] != "") { //Found one
+                        $strifers[$j]['leader'] = 1;
+                        $anotherplayer = true;
+                    }
+                    $j++;
+                }
+                if (!$anotherplayer) { //That was the last player character in the strife on that side. Remove that side from the strife.
+                    $j = 0;
+                    while ($j <= $n) {
+                        if ($strifers[$j]['side'] == $playerside) {
+                            $strifers[$j] = endStrife($strifers[$j]);
+                        }
+                        $j++;
+                    }
+                }
+            }
+            $strifers[$i] = endStrife($strifers[$i]);
+        } elseif ($strifers[$i]['side'] == $playerside) { //An ally has been slain
+            $health = $strifers[$i]['maxhealth'];
+            $energy = $strifers[$i]['maxenergy'];
+            $power = $strifers[$i]['maxpower'];
+            $strifers[$i]['health'] = $health;
+            $strifers[$i]['energy'] = $energy;
+            $strifers[$i]['power'] = $power;
+            mysqli_query($connection, "UPDATE `Strifers` SET `health` = $health, `energy` = $energy, `power` = $power WHERE `Strifers`.`ID` = " . $strifers[$i]['ID'] . " LIMIT 1;");
+            $strifers[$i] = endStrife($strifers[$i]);
+            //Code to handle allies being KOed goes in here.
+        } else { //An enemy has been slain
+            $enemyslain = true;
+            if ($strifers[$i]['owner'] == 0) { //The enemy is an NPC. Give loot to the current player and remove their strife row. Also report their death.
+                //On-death effects go here. Just loot for now. NOTE - Loot goes to the person executing the resolution i.e. the leader!
+                //Better hope they know how to share.
+                $output .=  "The ";
+                if ($strifers[$i]['grist'] != "None") {
+                    $output .=  $strifers[$i]['grist'] . " ";
+                }
+                $output .=  $strifers[$i]['name'] . " is defeated!<br />";
+                if ($strifers[$i]['name'] == "Kraken") {
+                    setAchievement($charrow, 'dungeon1');
+                }
+                if ($strifers[$i]['name'] == "Hekatonchire") {
+                    setAchievement($charrow, 'dungeon2');
+                }
+                if ($strifers[$i]['name'] == "Lich Queen") {
+                    setAchievement($charrow, 'dungeon3');
+                }
+                if ($strifers[$i]['name'] == "Construct New Building") {
+                    $moonprince = $moonprince + 1;
+                }
+                if ($strifers[$i]['name'] == "Royal Assassin") {
+                    $moonprince = $moonprince + 1;
+                }
+                $ondeath = explode('|', $strifers[$i]['ondeath']); //Expand out the status string so we can look at it
+                $j = 0;
+                $enemynumber += 1;
+                $lootstr = "It drops: ";
+                while (!empty($ondeath[$j])) { //We are looking at an on-death effect
+                    $current = explode(":", $ondeath[$j]);
+                    switch ($current[0]) { //Look for what effect this is
+                        case "GRIST": //Format: GRIST:<Grist type>:<Amount>:<Chance of this drop>|
+                            if (rand(0, 100) <= intval($current[3])) {
+                                $charrow['grists'] = modifyGrist($charrow['grists'], $current[1], intval($current[2]));
+                                $lootstr .= $current[2] . "<img src='" . gristImage($current[1]) . "' title='$current[1]' width='24' height='24'>, ";
+                            }
+                            break;
+                        case "PRISMATICGRIST": //Format: PRISMATICGRIST:<Amount>|
+                            $charrow['grists'] = modifyGrist($charrow['grists'], "Polychromite", intval($current[1]));
+                            $charrow['grists'] = modifyGrist($charrow['grists'], "Rainbow", intval($current[1]));
+                            $charrow['grists'] = modifyGrist($charrow['grists'], "Plasma", intval($current[1]));
+                            $charrow['grists'] = modifyGrist($charrow['grists'], "Opal", intval($current[1]));
+                            $lootstr .= $current[1] . "<img src='/images/grist/Polychromite.gif' title='Polychromite' width='24' height='24'>, ";
+                            $lootstr .= $current[1] . "<img src='/images/grist/Rainbow.gif' title='Rainbow' width='24' height='24'>, ";
+                            $lootstr .= $current[1] . "<img src='/images/grist/Plasma.gif' title='Plasma' width='24' height='24'>, ";
+                            $lootstr .= $current[1] . "<img src='/images/grist/Opal.gif' title='Opal' width='24' height='24'>, ";
+                            break;
+                        case "BOONDOLLARS": //Format: BOONDOLLARS:<minimum>:<maximum>|
+                            $boonies = intval($current[1]) + floor((rand(0, 1000) * (intval($current[2]) - intval($current[1]))) / 1000);
+                            $charrow['boondollars'] += $boonies;
+                            $lootstr .= "$boonies Boondollars, ";
+                            break;
+                        case "ITEM": //Format: ITEM:<ID>:<Metadata>|. Metadata separated by @'s. addItem adds the "1" by default, so metadata can be empty.
+                            require_once "includes/additem.php"; //Necessary for item drops
+                            $metadata = str_replace("@", ":", $current[2]);
+                            $itemcreate = addItem($charrow, intval($current[1]), $metadata);
+                            $itemname = itemName($current[1], $connection);
+                            if ($itemcreate) { //Item creation succeeded
+                                $lootstr .= $itemname . "(which you captchalogue), ";
+                            } else {
+                                setAchievement($charrow, 'itemfull'); //achievement
+                                $lootstr .= $itemname . "(which you don't have room for so you leave it behind), ";
+                            }
+                            break;
+                        case "BATTLEFIELD": //Format: BATTLEFIELD:<value>|. Enemy is part of the Dersite army, and killing them weakens it.
+                            $sessionresult = mysqli_query($connection, "SELECT battlefield_power FROM Sessions WHERE Sessions.ID = " . $charrow['session'] . " LIMIT 1;");
+                            $sessionrow = mysqli_fetch_array($sessionresult);
+                            sumStat($charrow, 'battlefield', intval($current[1]));
+                            $sessionrow['battlefield_power'] -= intval($current[1]);
+                            if ($sessionrow['battlefield_power'] < 0) {
+                                $sessionrow['battlefield_power'] = 0;
+                            }
+                            mysqli_query($connection, "UPDATE Sessions SET battlefield_power = " . $sessionrow['battlefield_power'] . " WHERE Sessions.ID = " . $charrow['session'] . " LIMIT 1;");
+                            $lootstr .= 'the power of the Dersite Army (where by "drops" we mean "decreases", and by that we mean not at all because the Black King hasn\'t been awoken by the "devs" yet, whatever that means), ';
+                            break;
+                        case "SPECIAL": //Miscellaneous on-death events.
+                            switch ($current[1]) {
+                                case "Denizen":
+                                    setAchievement($charrow, 'denizen');
+                                    notifySession($charrow, $charrow['name'] . " has defeated their Denizen!");
+                                    $lootstr = "You have defeated your Denizen, granting you access to the Battlefield.<br />";
+                                    mysqli_query($connection, "UPDATE `Characters` SET `denizendown` = 1 WHERE `Characters`.`ID` = " . $charrow['ID'] . " LIMIT 1;");
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    $j++;
+                }
+                //HEALTH GEL CODE
 
-				if (rand(0,100) < $gelchance && $topgel > 0) {
-					$gelchance = $gelchance / 2; //it becomes exponentially less likely to get more units
-					$topgel = $topgel - 1;
+                if (rand(0, 100) < $gelchance && $topgel > 0) {
+                    $gelchance = $gelchance / 2; //it becomes exponentially less likely to get more units
+                    $topgel = $topgel - 1;
 
-					if ($charrow['dreamingstatus'] != 'Prospit') {
-						$lootstr .= 'and some Vitality Gel cubes., '; //using 'and' in both because it'll always happen at the end of the string
-					} else {
-						$lootstr .= 'and a prospitian kindly offers you a refreshing glass of home-made lemonade for a job well done!, ';
-					}
+                    if ($charrow['dreamingstatus'] != 'Prospit') {
+                        $lootstr .= 'and some Vitality Gel cubes., '; //using 'and' in both because it'll always happen at the end of the string
+                    } else {
+                        $lootstr .= 'and a prospitian kindly offers you a refreshing glass of home-made lemonade for a job well done!, ';
+                    }
 
-					$keys= array_keys($strifers);
-					$firstkey = array_shift($keys);
-					$lead = $strifers[$firstkey];
+                    $keys = array_keys($strifers);
+                    $firstkey = array_shift($keys);
+                    $lead = $strifers[$firstkey];
 
 
-					if($charrow['dreamingstatus'] != 'Awake') $powerdifference = ($strifers[$i]['power'] * 1.5) / $lead['power']; //acounting for lack of equipment and passive class bullshit
-					elseif ($charrow['dungeon'] != 0) {
-						$healthfraction = 15;
-						$powerdifference = ($strifers[$i]['power'] * 1.5) / $lead['power']; //buff to dungeon health gel to make up for wild power differences
-					} else $powerdifference = ($strifers[$i]['power']) / $lead['power'];
-					if ($powerdifference > 1) $powerdifference = 1; //you get minimum penalty if your power is lower than the enemy's, so you'll recover $healthfraction
-					elseif ($powerdifference > 0.90 && $powerdifference < 0.95) $powerdifference *= 0.75; //penalties
-					elseif ($powerdifference > 0.80) $powerdifference *= 0.50;
-					elseif ($powerdifference <= 0.80) $powerdifference *= 0.1;  //this is so much more complicated than it needs to be
+                    if ($charrow['dreamingstatus'] != 'Awake') {
+                        $powerdifference = ($strifers[$i]['power'] * 1.5) / $lead['power'];
+                    } //acounting for lack of equipment and passive class bullshit
+                    elseif ($charrow['dungeon'] != 0) {
+                        $healthfraction = 15;
+                        $powerdifference = ($strifers[$i]['power'] * 1.5) / $lead['power']; //buff to dungeon health gel to make up for wild power differences
+                    } else {
+                        $powerdifference = ($strifers[$i]['power']) / $lead['power'];
+                    }
+                    if ($powerdifference > 1) {
+                        $powerdifference = 1;
+                    } //you get minimum penalty if your power is lower than the enemy's, so you'll recover $healthfraction
+                    elseif ($powerdifference > 0.90 && $powerdifference < 0.95) {
+                        $powerdifference *= 0.75;
+                    } //penalties
+                    elseif ($powerdifference > 0.80) {
+                        $powerdifference *= 0.50;
+                    } elseif ($powerdifference <= 0.80) {
+                        $powerdifference *= 0.1;
+                    }  //this is so much more complicated than it needs to be
 
-					$toheal = $toheal + $healthfraction * $powerdifference;
+                    $toheal = $toheal + $healthfraction * $powerdifference;
 
-					$finalhealth = $toheal == 0 ? 0 : floor($lead['maxhealth'] / (100 / $toheal));
-					if ($finalhealth < 10) $finalhealth = 10;
-					if ($lead['health'] + $finalhealth > $lead['maxhealth'])
-						$lead['health'] = $lead['maxhealth'];
-					else $lead['health'] += $finalhealth;
+                    $finalhealth = $toheal == 0 ? 0 : floor($lead['maxhealth'] / (100 / $toheal));
+                    if ($finalhealth < 10) {
+                        $finalhealth = 10;
+                    }
+                    if ($lead['health'] + $finalhealth > $lead['maxhealth']) {
+                        $lead['health'] = $lead['maxhealth'];
+                    } else {
+                        $lead['health'] += $finalhealth;
+                    }
 
-					$strifers[$firstkey] = $lead;
-				}
+                    $strifers[$firstkey] = $lead;
+                }
 
-				//END OF HEALTH GEL CODE
-				
+                //END OF HEALTH GEL CODE
 
-				$lootstr = substr($lootstr, 0, -2);
-				if ($lootstr == "It drops") $lootstr = "It drops: nothing!";
-				$output .=  $lootstr . "<br />";
-				if ($strifers[$i]['power'] > $charrow['enemiesbeaten']) { //This is the strongest enemy the leader has ever taken out!
-					mysqli_query($connection, "UPDATE `Characters` SET `enemiesbeaten` = " . $strifers[$i]['power'] . " WHERE `Characters`.`ID` = $charrow[ID] LIMIT 1");
-				}
-				mysqli_query($connection, "DELETE FROM `Strifers` WHERE `Strifers`.`ID` = " . $strifers[$i]['ID'] . " LIMIT 1;");
-				unset($strifers[$i]); //Remove their row from the database, then zap it out of the current combat array.
-			} else { //Since player deaths are picked out above, this should never happen.
-			}
-			//We'll need to hand out Echeladder rungs in here
-		}
-		//NOTE - If we're killing off the strifer, this is where we do it.
-	} elseif ($strifers[$i]['strifeID'] != 0 && !empty($strifers[$i]['strifeID'])) { //Make sure the strifer is still involved in strife.
-		$exists[$strifers[$i]['side']] = true; //This strifer's side of the strife still has a representative since they were not KOed this round
-	}
-	//Work with fraymotif values here, since they can affect everything up to this point, including being KOed.
-	if (!empty($strifers[$i])) { //Don't add values to a strifer that doesn't exist or it confuses the megaquery code
-		$strifers[$i]['currentmotif'] = "";
-		$strifers[$i]['teammotif'] = 0;
-	}
-	$i++;
+
+                $lootstr = substr($lootstr, 0, -2);
+                if ($lootstr == "It drops") {
+                    $lootstr = "It drops: nothing!";
+                }
+                $output .=  $lootstr . "<br />";
+                if ($strifers[$i]['power'] > $charrow['enemiesbeaten']) { //This is the strongest enemy the leader has ever taken out!
+                    mysqli_query($connection, "UPDATE `Characters` SET `enemiesbeaten` = " . $strifers[$i]['power'] . " WHERE `Characters`.`ID` = $charrow[ID] LIMIT 1");
+                }
+                mysqli_query($connection, "DELETE FROM `Strifers` WHERE `Strifers`.`ID` = " . $strifers[$i]['ID'] . " LIMIT 1;");
+                unset($strifers[$i]); //Remove their row from the database, then zap it out of the current combat array.
+            } else { //Since player deaths are picked out above, this should never happen.
+            }
+            //We'll need to hand out Echeladder rungs in here
+        }
+        //NOTE - If we're killing off the strifer, this is where we do it.
+    } elseif ($strifers[$i]['strifeID'] != 0 && !empty($strifers[$i]['strifeID'])) { //Make sure the strifer is still involved in strife.
+        $exists[$strifers[$i]['side']] = true; //This strifer's side of the strife still has a representative since they were not KOed this round
+    }
+    //Work with fraymotif values here, since they can affect everything up to this point, including being KOed.
+    if (!empty($strifers[$i])) { //Don't add values to a strifer that doesn't exist or it confuses the megaquery code
+        $strifers[$i]['currentmotif'] = "";
+        $strifers[$i]['teammotif'] = 0;
+    }
+    $i++;
 }
 if ($enemyslain) {
-	mysqli_query($connection, "UPDATE `Characters` SET
+    mysqli_query($connection, "UPDATE `Characters` SET
 	`grists` = '$charrow[grists]', `inventory` = '$charrow[inventory]', `metadata` = '$charrow[metadata]', `boondollars` = '$charrow[boondollars]'
 	WHERE `Characters`.`ID` = $charrow[ID] LIMIT 1;"); //Update these characteristics if an enemy was slain this turn.
 }
 if ((empty($exists) || count($exists) == 1) && !$unstuck) { //There is only one side left in the strife. Strife is over!
-	$j = 1;
-	$strifeID = 0;
-	while ($j <= $n) {
-		if (!empty($strifers[$j])) {//Don't add values to a strifer that doesn't exist or it confuses the megaquery code
-			if ($strifeID == 0) $strifeID = $strifers[$j]['strifeID']; //Save off strife ID for working with dungeon string.
-			if ($strifers[$j]['owner'] == 0 && $strifers[$j]['persist'] == 0) { //No "owner" and not persisted. Strifer will be removed.
-				mysqli_query($connection, "DELETE FROM `Strifers` WHERE `Strifers`.`ID` = " . $strifers[$j]['ID'] . " LIMIT 1;");
-			} elseif ($strifers[$j]['persist'] == 0) { //Persisters should hold on to their strife ID so they can be dialed up later
-				$strifers[$j] = endStrife($strifers[$j]);
-			}
-		}
-		$j++;
-	}
-	if (!empty($exists[$playerside])) { //Player victory!
-		$output .= "You're a winner!<br />";
-		$j = 0;
-		while ($j <= $n) {
-			if (!empty($strifers[$j])) {
-				//In here we iterate over all strifers and grant rungs to any who need them.
-				if ($strifers[$j]['side'] == $playerside && $strifers[$j]['echeladder'] != 0) { //A winning strifer who has an Echeladder value
-					if ($strifers[$j]['owner'] != 0) { //Strifer is a player
-						$allyresult = mysqli_query($connection, "SELECT * FROM `Characters` WHERE `Characters`.`ID` = " . $strifers[$j]['owner'] . " LIMIT 1;");
-						$allyrow = mysqli_fetch_array($allyresult);
-						$output .= gainRungs($allyrow, 1);
-						if($strifers[$j]['leader']==0) sendAchievement(getChar($strifers[$j]['owner']), 'assist');
-					}
-				} else { //Non-player strifer. Heal to max health, power, and energy.
-					$health = $strifers[$j]['maxhealth'];
-					$energy = $strifers[$j]['maxenergy'];
-					$power = $strifers[$j]['maxpower'];
-					$strifers[$j]['health'] = $health;
-					$strifers[$j]['energy'] = $energy;
-					$strifers[$j]['power'] = $power;
-					mysqli_query($connection, "UPDATE `Strifers` SET `health` = $health, `energy` = $energy, `power` = $power WHERE `Strifers`.`ID` = " . $strifers[$j]['ID'] . " LIMIT 1;");
-				}
-			}
-			$j++;
-		}
-		if ($charrow['dungeon'] != 0 && $charrow['dreamingstatus'] == "Awake") { //Player is in a dungeon. Take out the strife instance they just beat.
-			$output .= "You have cleared out the dungeon room!<br />";
-			$dungeonresult = mysqli_query($connection, "SELECT * FROM Dungeons WHERE ID = " . strval($charrow['dungeon']));
-			$dungeonrow = mysqli_fetch_array($dungeonresult);
-			$row = $charrow['dungeonrow'];
-			$col = $charrow['dungeoncol'];
-			$currentroom = $col . "," . $row;
-			$newencstr = $currentroom . ":EXISTS:" . strval($strifeID);
-			$dungeonrow['enc'] = str_replace($newencstr, "", $dungeonrow['enc']);
-			$newencstr = $currentroom . ":EXISTS:BOSS:" . strval($strifeID);
-			$dungeonrow['enc'] = str_replace($newencstr, "", $dungeonrow['enc']);
-			mysqli_query($connection,"UPDATE Dungeons SET enc = '" . $dungeonrow['enc'] . "' WHERE Dungeons.ID = " . $dungeonrow['ID'] . " LIMIT 1;");
-		}
-	} else { //Player has been defeated
-		$output .= "You're a loser!<br />";
-		//Probably just print a defeat message in here
-		if ($charrow['dreamingstatus'] == "Awake" && $charrow['dungeon'] != 0) { //Waking self was KOed
-			echo "You are forced back into the room you just left! <a id='advance' href='dungeons.php'>Return to dungeon ==></a><br />";
-			$olddungeonrow = $charrow['olddungeonrow'];
-			$olddungeoncol = $charrow['olddungeoncol'];
-			mysqli_query($connection, "UPDATE Characters set dungeonrow = $olddungeonrow, dungeoncol = $olddungeoncol WHERE Characters.ID = " . $charrow['ID'] . " LIMIT 1;");
-		}
-	}
-	if ($charrow['dreamingstatus'] == "Awake" && $charrow['dungeon'] != 0) echo "<a id='advance' href='dungeons.php'>Return to dungeon ==></a><br />";
-	$i++;
+    $j = 1;
+    $strifeID = 0;
+    while ($j <= $n) {
+        if (!empty($strifers[$j])) {//Don't add values to a strifer that doesn't exist or it confuses the megaquery code
+            if ($strifeID == 0) {
+                $strifeID = $strifers[$j]['strifeID'];
+            } //Save off strife ID for working with dungeon string.
+            if ($strifers[$j]['owner'] == 0 && $strifers[$j]['persist'] == 0) { //No "owner" and not persisted. Strifer will be removed.
+                mysqli_query($connection, "DELETE FROM `Strifers` WHERE `Strifers`.`ID` = " . $strifers[$j]['ID'] . " LIMIT 1;");
+            } elseif ($strifers[$j]['persist'] == 0) { //Persisters should hold on to their strife ID so they can be dialed up later
+                $strifers[$j] = endStrife($strifers[$j]);
+            }
+        }
+        $j++;
+    }
+    if (!empty($exists[$playerside])) { //Player victory!
+        $output .= "You're a winner!<br />";
+        $j = 0;
+        while ($j <= $n) {
+            if (!empty($strifers[$j])) {
+                //In here we iterate over all strifers and grant rungs to any who need them.
+                if ($strifers[$j]['side'] == $playerside && $strifers[$j]['echeladder'] != 0) { //A winning strifer who has an Echeladder value
+                    if ($strifers[$j]['owner'] != 0) { //Strifer is a player
+                        $allyresult = mysqli_query($connection, "SELECT * FROM `Characters` WHERE `Characters`.`ID` = " . $strifers[$j]['owner'] . " LIMIT 1;");
+                        $allyrow = mysqli_fetch_array($allyresult);
+                        $output .= gainRungs($allyrow, 1);
+                        if ($strifers[$j]['leader'] == 0) {
+                            sendAchievement(getChar($strifers[$j]['owner']), 'assist');
+                        }
+                    }
+                } else { //Non-player strifer. Heal to max health, power, and energy.
+                    $health = $strifers[$j]['maxhealth'];
+                    $energy = $strifers[$j]['maxenergy'];
+                    $power = $strifers[$j]['maxpower'];
+                    $strifers[$j]['health'] = $health;
+                    $strifers[$j]['energy'] = $energy;
+                    $strifers[$j]['power'] = $power;
+                    mysqli_query($connection, "UPDATE `Strifers` SET `health` = $health, `energy` = $energy, `power` = $power WHERE `Strifers`.`ID` = " . $strifers[$j]['ID'] . " LIMIT 1;");
+                }
+            }
+            $j++;
+        }
+        if ($charrow['dungeon'] != 0 && $charrow['dreamingstatus'] == "Awake") { //Player is in a dungeon. Take out the strife instance they just beat.
+            $output .= "You have cleared out the dungeon room!<br />";
+            $dungeonresult = mysqli_query($connection, "SELECT * FROM Dungeons WHERE ID = " . strval($charrow['dungeon']));
+            $dungeonrow = mysqli_fetch_array($dungeonresult);
+            $row = $charrow['dungeonrow'];
+            $col = $charrow['dungeoncol'];
+            $currentroom = $col . "," . $row;
+            $newencstr = $currentroom . ":EXISTS:" . strval($strifeID);
+            $dungeonrow['enc'] = str_replace($newencstr, "", $dungeonrow['enc']);
+            $newencstr = $currentroom . ":EXISTS:BOSS:" . strval($strifeID);
+            $dungeonrow['enc'] = str_replace($newencstr, "", $dungeonrow['enc']);
+            mysqli_query($connection, "UPDATE Dungeons SET enc = '" . $dungeonrow['enc'] . "' WHERE Dungeons.ID = " . $dungeonrow['ID'] . " LIMIT 1;");
+        }
+    } else { //Player has been defeated
+        $output .= "You're a loser!<br />";
+        //Probably just print a defeat message in here
+        if ($charrow['dreamingstatus'] == "Awake" && $charrow['dungeon'] != 0) { //Waking self was KOed
+            echo "You are forced back into the room you just left! <a id='advance' href='dungeons.php'>Return to dungeon ==></a><br />";
+            $olddungeonrow = $charrow['olddungeonrow'];
+            $olddungeoncol = $charrow['olddungeoncol'];
+            mysqli_query($connection, "UPDATE Characters set dungeonrow = $olddungeonrow, dungeoncol = $olddungeoncol WHERE Characters.ID = " . $charrow['ID'] . " LIMIT 1;");
+        }
+    }
+    if ($charrow['dreamingstatus'] == "Awake" && $charrow['dungeon'] != 0) {
+        echo "<a id='advance' href='dungeons.php'>Return to dungeon ==></a><br />";
+    }
+    $i++;
 }

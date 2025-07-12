@@ -6,32 +6,35 @@ require_once 'inc/autoload.php';
 session_start();
 
 if (!empty($_SESSION['username'])) { // If the user is already logged in, get accrow.
-	$username = $_SESSION['username'];
-	$accresult = mysqli_query($connection, "SELECT * FROM `Users` WHERE `username` = '" . $_SESSION['username'] . "' LIMIT 1;");
-	$accrow = mysqli_fetch_array($accresult);
+    $username = $_SESSION['username'];
+    $accresult = mysqli_query($connection, "SELECT * FROM `Users` WHERE `username` = '" . $_SESSION['username'] . "' LIMIT 1;");
+    $accrow = mysqli_fetch_array($accresult);
 }
-function showloginmsg() {
-	if (isset($_SESSION['loginmsg'])) {
-		echo('<br>' . $_SESSION['loginmsg'] . '<br>');
-		unset($_SESSION['loginmsg']);
-	}
+function showloginmsg(): void
+{
+    if (isset($_SESSION['loginmsg'])) {
+        echo('<br>' . $_SESSION['loginmsg'] . '<br>');
+        unset($_SESSION['loginmsg']);
+    }
 }
-function getcharbgcolor($charcolor) {
-	$charcolorhsl = Mexitek\PHPColors\Color::hexToHsl($charcolor);
-	if ($charcolorhsl['L'] > 0.7) {
-		$newL = 0.1;
-		$textc = '#fff';
-	} else {
-		$newL = 0.9;
-		$textc = '#000';
-	}
-	$charcolorhsl['L'] = $newL;
-	return('background: #' . Mexitek\PHPColors\Color::hslToHex($charcolorhsl) . '; color: ' . $textc .';');
+function getcharbgcolor($charcolor): string
+{
+    $charcolorhsl = Mexitek\PHPColors\Color::hexToHsl($charcolor);
+    if ($charcolorhsl['L'] > 0.7) {
+        $newL = 0.1;
+        $textc = '#fff';
+    } else {
+        $newL = 0.9;
+        $textc = '#000';
+    }
+    $charcolorhsl['L'] = $newL;
+    return('background: #' . Mexitek\PHPColors\Color::hslToHex($charcolorhsl) . '; color: ' . $textc .';');
 }
-function showCaptcha() {
-	global $captcha;
-	$captcha = true;
-	echo('<div class="g-recaptcha" data-sitekey="6LcsfQgTAAAAAKGVoQbr1nNjVrD88UnYHHrZDaxr" data-size="compact"></div>');
+function showCaptcha(): void
+{
+    global $captcha;
+    $captcha = true;
+    echo('<div class="g-recaptcha" data-sitekey="6LcsfQgTAAAAAKGVoQbr1nNjVrD88UnYHHrZDaxr" data-size="compact"></div>');
 }
 
 ?>
@@ -106,10 +109,13 @@ function showCaptcha() {
 					<img src="images/title/smallgrist.png">
 					<a href="/?faq">FAQ</a></div>
 				<div id="content-container2">
-<?php if (isset($_GET['changelog'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/changelog.html');
-elseif (isset($_GET['faq'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/faq.html');
-elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/credits.html');
-			else { // no other pages requested so they must want the news! ?>
+<?php if (isset($_GET['changelog'])) {
+    include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/changelog.html');
+} elseif (isset($_GET['faq'])) {
+    include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/faq.html');
+} elseif (isset($_GET['credits'])) {
+    include($_SERVER['DOCUMENT_ROOT'] . '/inc/title/credits.html');
+} else { // no other pages requested so they must want the news!?>
 					<ol style="text-align: left">
 						<li>Create an account.</li>
 						<li>Create a session (first button) if someone hasn't made it yet.</li>
@@ -121,7 +127,7 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 		</div>
 		<div id="rightcolumn">
 <?php if (empty($_SESSION['username'])) { // If the user isn't logged in...
-			if (isset($_GET['register'])) { // If the user is asking for the registration page... ?>
+    if (isset($_GET['register'])) { // If the user is asking for the registration page...?>
 			<?php showloginmsg(); ?>
 			<form action="addaccount.php" method="post">
 				Username: <input id="username" name="username" type="text" required autofocus><br>
@@ -134,7 +140,7 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 <?php showCaptcha(); ?>
 				<input type="submit" value="Register">
 			</form>
-<?php } else { // Nothing else is being requested and the user isn't trying to register, so make them log in! ?>
+<?php } else { // Nothing else is being requested and the user isn't trying to register, so make them log in!?>
 			<div id="login-header"></div>
 <?php showloginmsg(); ?>
 			<form id='login' action='login.php' method='post'>
@@ -145,8 +151,9 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 			<br>
 			<a href ='resetpass.php'>Forgot your password?</a><br>
 			<a href="/?register"><img src="/images/title/registertext.png"></a>
-<?php } } else { // The user is logged in now, so...
-	if (isset($_GET['newsession'])) { // If the user wants to register a session, we give them the session form. ?>
+<?php }
+} else { // The user is logged in now, so...
+    if (isset($_GET['newsession'])) { // If the user wants to register a session, we give them the session form.?>
 			<?php showloginmsg(); ?>
 			<form action="addsession.php" method="post">
 				Session name: <input id="sessionname" name="sessionname" type="text"><br>
@@ -154,7 +161,7 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 				Confirm password: <input id="confirmpw" name="confirmpw" type="password"><br>
 			<input type="submit" value="Create session">
 			</form>
-<?php } elseif (isset($_GET['newchar'])) { // If the user wants to make a new character, we give them the character form. ?>
+<?php } elseif (isset($_GET['newchar'])) { // If the user wants to make a new character, we give them the character form.?>
 			<?php showloginmsg(); ?>
 			<form name="charForm" action="addcharacter.php" onsubmit="return validateChar()" method="post"> Character name: <input id="charname" name="charname" type="text" /><br />
 				Session name: <input id="session" name="session" type="text"><br>
@@ -162,30 +169,32 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 				Select class:<select name="class">
 					<option value="Null">Select...</option>
 				<?php
-				$class_result = mysqli_query($connection, "SELECT Class, passivefactor, activefactor FROM Class_modifiers;");
-				while($class_row = mysqli_fetch_array($class_result)) {
-					if($class_row[0] == 'Default') continue;
-					echo '<option value="'.$class_row[0].'">';
-					echo $class_row[0];
-					if($class_row[1] > $class_row[2]) {
-						echo ' (Passive, '.$class_row[1].'%)';
-					} else {
-						echo ' (Active, '.$class_row[2].'%)';
-					}
-					echo '</option>';
-				}
-				?>
+                $class_result = mysqli_query($connection, "SELECT Class, passivefactor, activefactor FROM Class_modifiers;");
+    while ($class_row = mysqli_fetch_array($class_result)) {
+        if ($class_row[0] == 'Default') {
+            continue;
+        }
+        echo '<option value="'.$class_row[0].'">';
+        echo $class_row[0];
+        if ($class_row[1] > $class_row[2]) {
+            echo ' (Passive, '.$class_row[1].'%)';
+        } else {
+            echo ' (Active, '.$class_row[2].'%)';
+        }
+        echo '</option>';
+    }
+    ?>
 				</select><br>
 				Select aspect:<select name="aspect">
 					<option value="Null">Select...</option>
 				<?php
-				$aspect_result = mysqli_query($connection, "SELECT Aspect FROM Aspect_modifiers;");
-				while($aspect_row = mysqli_fetch_array($aspect_result)) {
-					echo '<option value="'.$aspect_row[0].'">';
-					echo $aspect_row[0];
-					echo '</option>';
-				}
-				?>
+    $aspect_result = mysqli_query($connection, "SELECT Aspect FROM Aspect_modifiers;");
+    while ($aspect_row = mysqli_fetch_array($aspect_result)) {
+        echo '<option value="'.$aspect_row[0].'">';
+        echo $aspect_row[0];
+        echo '</option>';
+    }
+    ?>
 					</select><br>
 				Dream moon: <select name="dreamer">
 					<option value="Null">Select...</option>
@@ -194,7 +203,7 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 				</select><br>
 				<input type="submit" value="Create character" />
 			</form>
-<?php } else { // The user OBVIOUSLY doesn't want any other pages, and they're already logged in, so we give them the character select page. ?>
+<?php } else { // The user OBVIOUSLY doesn't want any other pages, and they're already logged in, so we give them the character select page.?>
 			<div id="controlbuttons">
 				<a href="/?newsession"><div style="width: 64px; height: 64px; border-radius: 18px; background: url(images/title/addsession.png) no-repeat center center, #b8e0ef; display: inline-block;"></div></a>
 				<a href="/?newchar"><div style="width: 64px; height: 64px; border-radius: 18px; background: url(images/title/addchar.png) no-repeat center center, #b8e0ef; display: inline-block;"></div></a>
@@ -204,25 +213,27 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 <?php showloginmsg(); ?>
 			<div id="charsel">
 				<?php
-				$chars = explode("|", $accrow['characters']);
-				$i = 0;
-				$charquery = "SELECT `ID`,`name`,`session`,`symbol`,`colour` FROM Characters WHERE ";
-				$foundone = false;
-				while (!empty($chars[$i])) {
-					$foundone = true;
-					$charquery .= "ID = " . strval($chars[$i]) . " OR ";
-					$i++;
-				}
-				if ($foundone) {
-					$charquery = substr($charquery, 0, -4);
-					$charresult = mysqli_query($connection, $charquery);
-					while ($row = mysqli_fetch_array($charresult)) {
-						if (empty($sname[$row['session']])) {
-							$sesrow = loadSessionrow($row['session']);
-							if ($sesrow === null) continue;
-							$sname[$row['session']] = $sesrow['name'];
-						}
-						$symbol = "'" . $row['symbol'] . "'";?>
+    $chars = explode("|", $accrow['characters']);
+    $i = 0;
+    $charquery = "SELECT `ID`,`name`,`session`,`symbol`,`colour` FROM Characters WHERE ";
+    $foundone = false;
+    while (!empty($chars[$i])) {
+        $foundone = true;
+        $charquery .= "ID = " . strval($chars[$i]) . " OR ";
+        $i++;
+    }
+    if ($foundone) {
+        $charquery = substr($charquery, 0, -4);
+        $charresult = mysqli_query($connection, $charquery);
+        while ($row = mysqli_fetch_array($charresult)) {
+            if (empty($sname[$row['session']])) {
+                $sesrow = loadSessionrow($row['session']);
+                if ($sesrow === null) {
+                    continue;
+                }
+                $sname[$row['session']] = $sesrow['name'];
+            }
+            $symbol = "'" . $row['symbol'] . "'";?>
 						<a title="<?php echo($sname[$row['session']]); ?>" href="/changechar.php?c=<?php echo($row['ID']); ?>">
 							<div class="character" charid="<?php echo($row['ID']); ?>" style="<?php echo(getcharbgcolor('#'.$row['colour'])); ?>;">
 								<div class="charimg" style="background: url(<?php echo($symbol); ?>) center center no-repeat, #fff;"></div>
@@ -238,9 +249,11 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 					<?php } ?>
 				To delete a character, right click it and select delete.
 			</div>
-				<?php } else { // Account has no characters ?>
+				<?php } else { // Account has no characters?>
 							<div>No characters found</div>
-				<?php } } } ?>
+				<?php }
+				}
+} ?>
 		</div>
 		<script src="/js/jquery.min.js"></script>
 		<script src="/js/jquery.ui.position.js"></script>
@@ -261,6 +274,8 @@ elseif (isset($_GET['credits'])) include($_SERVER['DOCUMENT_ROOT'] . '/inc/title
 				}
 			});
 		</script>
-<?php if (isset($captcha) && ($captcha == true)) echo("    <script src='https://www.google.com/recaptcha/api.js'></script>\n"); ?>
+<?php if (isset($captcha) && ($captcha == true)) {
+    echo("    <script src='https://www.google.com/recaptcha/api.js'></script>\n");
+} ?>
 	</body>
 </html>
