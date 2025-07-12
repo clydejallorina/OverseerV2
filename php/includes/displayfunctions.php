@@ -115,60 +115,64 @@ function displayStatus($statustr): void
         $i++;
     }
 }
-function displayBonus($bonustr): void
-{
-    $bonuses = explode('|', $bonustr);
-    $i = 0;
-    while (!empty($bonuses[$i])) {
-        $currentbonus = explode(':', $bonuses[$i]);
-        if ($currentbonus[2] != "0") { //Bonus actually has a value
-            switch ($currentbonus[0]) {
-                case "POWER":
-                    echo "Power boost. ";
-                    break;
-                case "OFFENSE":
-                    echo "Offense boost. ";
-                    break;
-                case "DEFENSE":
-                    echo "Defense boost. ";
-                    break;
-                case "AGGRIEVE":
-                    echo "Aggrieve boost. ";
-                    break;
-                case "AGGRESS":
-                    echo "Aggress boost. ";
-                    break;
-                case "ASSAIL":
-                    echo "Assail boost. ";
-                    break;
-                case "ASSAULT":
-                    echo "Assault boost. ";
-                    break;
-                case "ABUSE":
-                    echo "Abuse boost. ";
-                    break;
-                case "ACCUSE":
-                    echo "Accuse boost. ";
-                    break;
-                case "ABJURE":
-                    echo "Abjure boost. ";
-                    break;
-                case "ABSTAIN":
-                    echo "Abstain boost. ";
-                    break;
-                default:
-                    echo "No message for bonus $currentbonus[0]. This is probably a bug, please submit a report!";
-                    break;
-            }
-            echo " Value: $currentbonus[2]. ";
-            if (intval($currentbonus[1]) != 0) {
-                echo " Duration: $currentbonus[1] turn(s).<br />"; //Line break and duration after each status message.
-            } else { //Duration of 0 represents no expiry
-                echo " Duration: Entire strife.<br />";
-            }
-        }
-        $i++;
-    }
+function displayBonus($bonustr) {
+	$bonuses = explode('|', $bonustr);
+	$i = 0;
+	while (!empty($bonuses[$i])) {
+		$currentbonus = explode(':', $bonuses[$i]);
+		if ($currentbonus[2] != "0") { //Bonus actually has a value
+			switch ($currentbonus[0]) {
+				case "POWER":
+					echo "Power boost. ";
+					/*if($currentbonus[2] < "0"){ // If the value of the bonus is negative, it will display there's a decrease
+						echo "Power decrease. ";
+						$currentbonus[2]*=-1;
+					}
+					else echo "Power boost. "; // Else, it will show there's a Power boost - Copia */
+					break;
+				case "OFFENSE":
+					echo "Offense boost. ";
+					break;
+				case "DEFENSE":
+					echo "Defense boost. ";
+					break;
+				case "AGGRIEVE":
+					echo "Aggrieve boost. ";
+					break;
+				case "AGGRESS":
+					echo "Aggress boost. ";
+					break;
+				case "ASSAIL":
+					echo "Assail boost. ";
+					break;
+				case "ASSAULT":
+					echo "Assault boost. ";
+					break;
+				case "ABUSE":
+					echo "Abuse boost. ";
+					break;
+				case "ACCUSE":
+					echo "Accuse boost. ";
+					break;
+				case "ABJURE":
+					echo "Abjure boost. ";
+					break;
+				case "ABSTAIN":
+					echo "Abstain boost. ";
+					break;
+			default:
+					echo "No message for bonus $currentbonus[0]. This is probably a bug, please submit a report!";
+					break;
+			}
+			echo " Value: $currentbonus[2]. ";
+			if (intval($currentbonus[1]) != 0) {
+				echo " Duration: $currentbonus[1] turn(s).<br />"; //Line break and duration after each status message.
+			} else { //Duration of 0 represents no expiry
+				echo " Duration: Entire strife.<br />";
+			}
+		}
+		$i++;
+	}
 }
 function fraymotifMessage($strifer): string //Function takes a strifer and prints out the deets on their current fraymotif
 {if (empty($strifer['currentmotif'])) {
