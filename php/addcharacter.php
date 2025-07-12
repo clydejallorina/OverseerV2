@@ -1,4 +1,5 @@
 <?php
+
 // Overseer v2 Character Creation Code
 
 // Start the session and fire up the database connection.
@@ -8,9 +9,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/database.php';
 
 // Check if the user is logged in, otherwise bounce them back to the login page.
 if (empty($_SESSION['userid'])) {
-  $_SESSION['loginmsg'] = "You must be logged in to do that!";
-  header('Location: /');
-  exit();
+    $_SESSION['loginmsg'] = "You must be logged in to do that!";
+    header('Location: /');
+    exit();
 }
 
 // Grab the user's account line
@@ -18,25 +19,25 @@ $accquery = $db->prepare("SELECT ID,username,characters FROM Users WHERE ID = :u
 $accquery->bindParam(':userid', $_SESSION['userid']);
 $accquery->execute();
 if ($accquery->rowcount() != 1) {
-  $_SESSION['loginmsg'] = "Sorry, your account is fucked royally.";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Sorry, your account is fucked royally.";
+    header('Location: /?newchar');
+    exit();
 }
 $accrow = $accquery->fetch();
 unset($accquery);
 
 // Check that the character's name isn't blank, otherwise error out.
 if ($_POST['charname'] == "") {
-  $_SESSION['loginmsg'] = "Your character's name cannot be blank!";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Your character's name cannot be blank!";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Check that the character's name consists of only alphanumeric characters and spaces.
 if (!preg_match('/^[a-zA-Z0-9 ]*$/', $_POST['charname'])) {
-  $_SESSION['loginmsg'] = "You may only use alphanumeric characters in your character's name.";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "You may only use alphanumeric characters in your character's name.";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Trim extra surrounding space from the character's name to eliminate problems.
@@ -44,23 +45,23 @@ $_POST['charname'] = trim($_POST['charname']);
 
 // Check that the character's class isn't blank or Null.
 if ($_POST['class'] == "" || $_POST['class'] == "Null") {
-  $_SESSION['loginmsg'] = "Your character's class cannot be blank!";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Your character's class cannot be blank!";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Check that the character's aspect isn't blank or Null.
 if ($_POST['aspect'] == "" || $_POST['aspect'] == "Null") {
-  $_SESSION['loginmsg'] = "Your character's aspect cannot be blank!";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Your character's aspect cannot be blank!";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Check that the character's dream moon isn't blank or Null.
 if ($_POST['dreamer'] == "" || $_POST['dreamer'] == "Null") {
-  $_SESSION['loginmsg'] = "Your character's dream moon cannot be blank!";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Your character's dream moon cannot be blank!";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Load the session, since we'll need that to check if the password matches and to check for name collisions.
@@ -68,18 +69,18 @@ $sessionquery = $db->prepare("SELECT ID,name,password,members FROM Sessions WHER
 $sessionquery->bindParam(':sessionname', $_POST['session']);
 $sessionquery->execute();
 if ($sessionquery->rowcount() != 1) {
-  $_SESSION['loginmsg'] = "Sorry, the session you provided doesn't exist.";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Sorry, the session you provided doesn't exist.";
+    header('Location: /?newchar');
+    exit();
 }
 $sessionrow = $sessionquery->fetch();
 unset($sessionquery);
 
 // Check the session's password.
 if (!password_verify($_POST['sessionpw'], $sessionrow['password'])) {
-  $_SESSION['loginmsg'] = "Sorry, the password that you provided for the session is incorrect.";
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = "Sorry, the password that you provided for the session is incorrect.";
+    header('Location: /?newchar');
+    exit();
 }
 
 // Check that the character's name isn't already being used in this session.
@@ -88,17 +89,19 @@ $checkquery->bindParam(':charname', $_POST['charname']);
 $checkquery->bindParam(':sessionid', $sessionrow['ID']);
 $checkquery->execute();
 if ($checkquery->rowcount() != 0) {
-  $_SESSION['loginmsg'] = 'That name is already taken in this session.';
-  header('Location: /?newchar');
-  exit();
+    $_SESSION['loginmsg'] = 'That name is already taken in this session.';
+    header('Location: /?newchar');
+    exit();
 }
 unset($checkquery);
 
 // Determine the starting grist bonus
 $mems = substr_count($sessionrow['members'], "|") + 1;
 if ($mems < 4) {
-  $startgrist = pow(10,$mems) * 2;
-} else $startgrist = 20000;
+    $startgrist = pow(10, $mems) * 2;
+} else {
+    $startgrist = 20000;
+}
 $members = $sessionrow['members'];
 
 $grists = "Build_Grist:" . strval($startgrist) . "|";
@@ -113,8 +116,8 @@ $stats2 = [                    //put stats you want the character to start with 
           ];
 
 $stats = '';
-foreach($stats2 as $key => $stat){
-  $stats= $stats . $key . ':' . $stat . '|';
+foreach ($stats2 as $key => $stat) {
+    $stats = $stats . $key . ':' . $stat . '|';
 }
 
 $achievements = array('created');

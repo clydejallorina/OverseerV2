@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Overseer v2 PHP Class: Character
  *
@@ -15,7 +16,8 @@
 
 namespace Overseer;
 
-use \PDO;
+use PDO;
+use Exception;
 
 /**
  * Character data handling class
@@ -31,12 +33,15 @@ use \PDO;
  */
 class Character
 {
+    public int $id;
+    public Grist $grist;
+    public Strifer $wakeself;
+    public Strifer $dreamself;
+    public Strifer $strife;
 
-    public $id, $grist, $wakeself, $dreamself, $strife;
+    private PDO $_dbhandle;
 
-    private $_dbhandle;
-    
-    // Gate  height definitions, defined in reverse.
+    // Gate height definitions, defined in reverse.
     private $_gates = array(
                        7 => 24000000,
                        6 => 11111100,
@@ -48,7 +53,8 @@ class Character
                        0 => 0,
                       );
 
-    private $_data = array(), $_datamod = array();
+    private $_data = [];
+    private $_datamod = [];
 
 
     /**
@@ -57,12 +63,10 @@ class Character
      * Automatically calls load() if there is a character ID passed during
      * creation of the class.
      *
-     * @param PDO     $dbhandle The global PDO object for the database.
-     * @param integer $initid   The character ID to start with.
-     *
-     * @access public
+     * @param PDO $dbhandle The global PDO object for the database.
+     * @param int $initid   The character ID to start with.
      */
-    function __construct(PDO $dbhandle, $initid=-1)
+    public function __construct(PDO $dbhandle, int $initid = -1)
     {
 
         $this->_dbhandle = $dbhandle;
@@ -85,29 +89,27 @@ class Character
      *
      * @return mixed The definition of the variable being requested,
      *               otherwise, null.
-     *
-     * @access public
      */
-    public function __get($name)
+    public function __get(string $name): mixed
     {
 
         // Check for any special variables that require "thinking".
         switch ($name) {
-        case "gatesreached":
-            foreach ($this->_gates as $gate => $reqheight) {
-                if ($this->house_build >= $reqheight) {
-                    return $gate;
-                    break;
+            case "gatesreached":
+                foreach ($this->_gates as $gate => $reqheight) {
+                    if ($this->house_build >= $reqheight) {
+                        return $gate;
+                        break;
+                    }
                 }
-            }
-            break;
+                break;
 
-        // Default back to loading a variable from a _data key otherwise.
-        default:
-            if (array_key_exists($name, $this->_data)) {
-                return $this->_data[$name];
-            }
-            break;
+                // Default back to loading a variable from a _data key otherwise.
+            default:
+                if (array_key_exists($name, $this->_data)) {
+                    return $this->_data[$name];
+                }
+                break;
         }
 
         // Output would have been returned by now, nullifying the function
@@ -127,11 +129,9 @@ class Character
      * @param string $name  The variable to set
      * @param mixed  $value The value to give to the variable
      *
-     * @return null
-     *
      * @access public
      */
-    public function __set($name, $value)
+    public function __set(string $name, mixed $value): void
     {
 
         if (array_key_exists($name, $this->_data)) {
@@ -151,15 +151,12 @@ class Character
      * that is wholly responsible for populating every single aspect of data
      * served from this class.
      *
-     * @param integer $characterID The ID of the character that needs to be loaded.
-     *
-     * @return null
+     * @param int $characterID The ID of the character that needs to be loaded.
      *
      * @access public
      */
-    public function load($characterID)
+    public function load(int $characterID): void
     {
-
         // Get the character's row to load it into the object.
         $charquery = $this->_dbhandle->prepare(
             'SELECT * FROM `Characters` WHERE `ID` = :charid'
@@ -184,7 +181,7 @@ class Character
         $this->id = $charrow['ID'];
 
         // Start with an empty data table.
-        $this->_data = array();
+        $this->_data = [];
 
         // Enumerate direct values (strings and numbers).
         $directs = array(
@@ -235,7 +232,7 @@ class Character
                     'strifedeck',
                     'modus',
                    );
-        
+
         // Enumerate boolean numerics.
         $booleans = array(
                      'inmedium',
@@ -256,7 +253,7 @@ class Character
         foreach ($directs as $dbkey) {
             $this->_data[$dbkey] = $charrow[$dbkey];
         }
-        
+
         // Convert boolean numerics to booleans and store as data keys.
         foreach ($booleans as $dbkey) {
             // Convert 1 to true and 0 to false.
@@ -278,10 +275,10 @@ class Character
             // Unset our used variables to save memory.
             unset($convertedvalue);
         }
-        
+
         // Convert lists to arrays and store into data keys.
         foreach ($lists as $dbkey) {
-            $this->_data[$dbkey] = array();
+            $this->_data[$dbkey] = [];
             foreach (explode('|', $charrow[$dbkey]) as $listNode) {
                 if (!empty($listNode)) {
                     $this->_data[$dbkey][] = $listNode;
@@ -294,15 +291,15 @@ class Character
         true;
 
         // Instantiate the grist object and load it from the db.
-        $this->grist = new \Overseer\Grist;
+        $this->grist = new Grist();
         $this->grist->importOld($charrow['grists']);
 
         // Initialize the strifer objects for wakeself and dreamself.
-        $this->wakeself  = new \Overseer\Strifer(
+        $this->wakeself  = new Strifer(
             $this->_dbhandle,
             $charrow['wakeself']
         );
-        $this->dreamself = new \Overseer\Strifer(
+        $this->dreamself = new Strifer(
             $this->_dbhandle,
             $charrow['dreamself']
         );
@@ -314,7 +311,7 @@ class Character
             $this->strife = &$this->dreamself;
         }
 
-    }//end load()
+    }
 
 
     /**
@@ -323,22 +320,18 @@ class Character
      * A fancy save function that detects which variables have been changed and
      * dynamically assembles an SQL query for them.  Also kicks off the save
      * function for associated sub-objects such as strife.
-     *
-     * @return null
-     *
-     * @access public
      */
-    public function save()
+    public function save(): void
     {
         // Initialize the query formation arrays.
-        $updatepairs  = array();
-        $updatebinds  = array();
-        $updatevalues = array();
+        $updatepairs  = [];
+        $updatebinds  = [];
+        $updatevalues = [];
 
         // Save the strifer rows since they should handle themselves.
         //$this->wakeself->save();
         //$this->dreamself->save();
-        
+
         // Check if the grist array has been modified, export it if so.
         if ($this->grist->modified) {
             $updatepairs[]          = 'grists';
@@ -348,47 +341,47 @@ class Character
             // it's used again after we save.
             $this->grist->modified = false;
         }
-        
+
         if (count($this->_datamod) != 0) {
             foreach ($this->_datamod as $modkey) {
                 switch ($modkey) {
-                // Here would be a perfect place to set custom handlers
-                // for custom datatypes.
-                // By default, sort out data types by object type.
-                default:
-                    switch (gettype($this->_data[$modkey])) {
-                    // Booleans must be converted to 1's and 0's.
-                    case 'boolean':
-                        $updatepairs[] = $modkey;
-                        if ($this->_data[$modkey] == true) {
-                            $updatevalues[$modkey] = 1;
-                        } else {
-                            $updatevalues[$modkey] = 0;
-                        }
+                    // Here would be a perfect place to set custom handlers
+                    // for custom datatypes.
+                    // By default, sort out data types by object type.
+                    default:
+                        switch (gettype($this->_data[$modkey])) {
+                            // Booleans must be converted to 1's and 0's.
+                            case 'boolean':
+                                $updatepairs[] = $modkey;
+                                if ($this->_data[$modkey] == true) {
+                                    $updatevalues[$modkey] = 1;
+                                } else {
+                                    $updatevalues[$modkey] = 0;
+                                }
+                                break;
+                                // Anything that is a number or a string is stored directly.
+                            case 'integer':
+                            case 'double':
+                            case 'float':
+                            case 'string':
+                                $updatepairs[]        = $modkey;
+                                $updatebinds[$modkey] = &$this->_data[$modkey];
+                                break;
+                                // Arrays must be converted to "old" implode format.
+                            case 'array':
+                                // An array handler still needs to be written.
+                                true;
+                                break;
+                        }//end switch
                         break;
-                    // Anything that is a number or a string is stored directly.
-                    case 'integer':
-                    case 'double':
-                    case 'float':
-                    case 'string':
-                        $updatepairs[]        = $modkey;
-                        $updatebinds[$modkey] = &$this->_data[$modkey];
-                        break;
-                    // Arrays must be converted to "old" implode format.
-                    case 'array':
-                        // An array handler still needs to be written.
-                        true;
-                        break;
-                    }//end switch
-                    break;
                 }//end switch
             }//end foreach
         }//end if
-        
+
         // Check if we have anything to submit.
         if (count($updatepairs) != 0) {
             // Create an empty array as a basis.
-            $querypairs = array();
+            $querypairs = [];
 
             // Iterate over each prepared pair and add it to the pairs array.
             foreach ($updatepairs as $sqlvar) {
@@ -414,8 +407,5 @@ class Character
             $updatechar->bindParam(':charid', $this->id);
             $updatechar->execute();
         }//end if
-
     }//end save()
-
-
 }//end class

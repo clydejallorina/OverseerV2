@@ -1,1 +1,1 @@
-<?php header('Location: /?newsession'); ?>
+<?php header('Location: /?newsession');

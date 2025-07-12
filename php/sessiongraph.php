@@ -1,4 +1,5 @@
 <?php
+
 require_once $_SERVER['DOCUMENT_ROOT'] . "/includes/global_functions.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/database.php';
 
@@ -6,7 +7,9 @@ $session = unserialize(urldecode($_GET['chain']));
 $characterids = $session;
 $characternumber = sizeof($characterids);
 $mult = $characternumber * 10;
-if ($mult < 200) $mult = 200;
+if ($mult < 200) {
+    $mult = 200;
+}
 $radius = ($mult * 1.5) / 2;
 $angle2 = deg2rad(360) / $characternumber;
 $angle = 0;
@@ -15,32 +18,31 @@ $black = ImageColorAllocate($image, 0, 0, 0);
 $white = ImageColorAllocate($image, 255, 255, 255);
 imagefill($image, 0, 0, $white);
 $fontsize = $characternumber / 40;
-if ($fontsize < 5) $fontsize = 5;
+if ($fontsize < 5) {
+    $fontsize = 5;
+}
 
 
 imageellipse($image, $mult, $mult, $mult * 1.5, $mult * 1.5, $black);
-foreach ($characterids as $char)
-{
-	$angle3 = $angle;
-	$chara = getChar($char);
-	$name = $chara['name'];
-	$namewidth = ($fontsize * strlen($name) * cos(deg2rad($angle3))) / 2;
-	$color = $chara['colour'];
-	$playercol = ImageColorAllocate($image, hex2RGB($color)['red'], hex2RGB($color)['green'], hex2RGB($color)['blue']);
-	$nameheight = ($fontsize * strlen($name) * sin($angle)) / 2;
-	if((rad2deg($angle) > 90) && (rad2deg($angle) < 270))
-	{
-		$angle3 = deg2rad(rad2deg($angle) - 180);
-		$nameheight = (-$fontsize * strlen($name) * sin($angle)) / 2;
-	}
-	if(rad2deg($angle) > 270)
-	{
-		$angle3 = deg2rad(rad2deg($angle));
-	}
-	$circlex = $mult + $radius * cos($angle);
-	$circley = $mult + $radius * sin($angle);
-	imagettftext($image, $fontsize, (int)(-rad2deg($angle3)), (int)($circlex - $namewidth), (int)($circley - $nameheight), $playercol, dirname(__FILE__) . '/fonts/ascii.ttf', $name);
-	$angle += $angle2;
+foreach ($characterids as $char) {
+    $angle3 = $angle;
+    $chara = getChar($char);
+    $name = $chara['name'];
+    $namewidth = ($fontsize * strlen($name) * cos(deg2rad($angle3))) / 2;
+    $color = $chara['colour'];
+    $playercol = ImageColorAllocate($image, hex2RGB($color)['red'], hex2RGB($color)['green'], hex2RGB($color)['blue']);
+    $nameheight = ($fontsize * strlen($name) * sin($angle)) / 2;
+    if ((rad2deg($angle) > 90) && (rad2deg($angle) < 270)) {
+        $angle3 = deg2rad(rad2deg($angle) - 180);
+        $nameheight = (-$fontsize * strlen($name) * sin($angle)) / 2;
+    }
+    if (rad2deg($angle) > 270) {
+        $angle3 = deg2rad(rad2deg($angle));
+    }
+    $circlex = $mult + $radius * cos($angle);
+    $circley = $mult + $radius * sin($angle);
+    imagettftext($image, $fontsize, (int)(-rad2deg($angle3)), (int)($circlex - $namewidth), (int)($circley - $nameheight), $playercol, dirname(__FILE__) . '/fonts/ascii.ttf', $name);
+    $angle += $angle2;
 }
 header('Content-type: image/png');
 ImagePNG($image);

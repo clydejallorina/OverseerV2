@@ -38,7 +38,8 @@ require_once "includes/designix.php"; ?>
 </script>
 
 <?php
-function realpower($row) {
+function realpower($row)
+{
     $power = $row['power'];
     $bonuses = array(
         "aggrieve" => $row['aggrieve'],
@@ -55,17 +56,19 @@ function realpower($row) {
     if ($power == 0) { //no power, probably because the item isn't a weapon, so let's determine what its effective power would be based on grist cost
         $grists = $row['gristcosts'];
         $gristarray = array();
-        $gristshit = explode( '|', $grists);
+        $gristshit = explode('|', $grists);
         array_pop($gristshit);
-        foreach( $gristshit as $val ){
-            $tmp = explode( ':', $val );
+        foreach ($gristshit as $val) {
+            $tmp = explode(':', $val);
             $gristarray[ $tmp[0] ] = $tmp[1];
         }
         $gristcost = array_sum($gristarray);
-        $power = ceil(sqrt($gristcost*8));
+        $power = ceil(sqrt($gristcost * 8));
         echo "<br />--grist cost $gristcost = power $power--<br />";
     }
-    if ($power == 0) $power = 1; //vo¬ov
+    if ($power == 0) {
+        $power = 1;
+    } //vo¬ov
     return $power;
 }
 
@@ -75,72 +78,74 @@ if ($_SESSION['username'] != "") {
         $op = $_GET['op'];
         $aok = false;
 
-		$potentialInstability = false;
+        $potentialInstability = false;
 
         $code1 = $_GET['code1'];
-		$code1Binary = breakdown($code1);
-		if (substr_count($code1Binary, '0') <= 12) {
-			echo 'The first code has a lot of holes punched. You feel like it might be best used in && alchemy. <br/>';
-			$potentialInstability = true;
-		} elseif (substr_count($code1Binary, '0') >= 36) {
-			echo 'The first code doesn\'t have many holes punched. You feel like it might be best used in || alchemy. <br/>';
-			$potentialInstability = true;
-		}
+        $code1Binary = breakdown($code1);
+        if (substr_count($code1Binary, '0') <= 12) {
+            echo 'The first code has a lot of holes punched. You feel like it might be best used in && alchemy. <br/>';
+            $potentialInstability = true;
+        } elseif (substr_count($code1Binary, '0') >= 36) {
+            echo 'The first code doesn\'t have many holes punched. You feel like it might be best used in || alchemy. <br/>';
+            $potentialInstability = true;
+        }
 
         $code2 = $_GET['code2'];
-		$code2Binary = breakdown($code2);
-		if (substr_count($code2Binary, '0') <= 12) {
-			echo 'The second code has a lot of holes punched. You feel like it might be best used in && alchemy. <br/>';
-			$potentialInstability = true;
-		} elseif (substr_count($code2Binary, '0') >= 36) {
-			echo 'The second code doesn\'t have many holes punched. You feel like it might be best used in || alchemy. <br/>';
-			$potentialInstability = true;
-		}
+        $code2Binary = breakdown($code2);
+        if (substr_count($code2Binary, '0') <= 12) {
+            echo 'The second code has a lot of holes punched. You feel like it might be best used in && alchemy. <br/>';
+            $potentialInstability = true;
+        } elseif (substr_count($code2Binary, '0') >= 36) {
+            echo 'The second code doesn\'t have many holes punched. You feel like it might be best used in || alchemy. <br/>';
+            $potentialInstability = true;
+        }
 
-		if ($potentialInstability) { echo '<br/>'; }
+        if ($potentialInstability) {
+            echo '<br/>';
+        }
 
-		if ($op == "and") { // Begin new item code generation
-			$code = andcombine($code1,$code2);
-		} elseif ($op == "or") {
-			$code = orcombine($code1,$code2);
-		}
-		
-		$usedOtherOp = false;
+        if ($op == "and") { // Begin new item code generation
+            $code = andcombine($code1, $code2);
+        } elseif ($op == "or") {
+            $code = orcombine($code1, $code2);
+        }
+
+        $usedOtherOp = false;
         $usableCode = true;
         $binaryString = breakdown($code);
-		if (substr_count($binaryString, '0') <= 12 || substr_count($binaryString, '0') >= 36) {
+        if (substr_count($binaryString, '0') <= 12 || substr_count($binaryString, '0') >= 36) {
             if ($op = 'or') {
-				if (substr_count($binaryString, '0') <= 12) {
-					echo 'The result code has too many holes punched, which makes for terrible alchemy. You try && alchemy instead. <br/>';
-					$usedOtherOp = true;
-				} elseif (substr_count($binaryString, '0') >= 36) {
-					echo 'The result code doesn\'t have enough holes punched, which makes for terrible alchemy. You try && alchemy instead. <br/>';
-					$usedOtherOp = true;
-				}
-				
+                if (substr_count($binaryString, '0') <= 12) {
+                    echo 'The result code has too many holes punched, which makes for terrible alchemy. You try && alchemy instead. <br/>';
+                    $usedOtherOp = true;
+                } elseif (substr_count($binaryString, '0') >= 36) {
+                    echo 'The result code doesn\'t have enough holes punched, which makes for terrible alchemy. You try && alchemy instead. <br/>';
+                    $usedOtherOp = true;
+                }
+
                 $newCode = andCombine($code1, $code2);
                 $binaryString = breakdown($newCode);
                 $op = 'and';
                 if (substr_count($binaryString, '0') <= 12 || substr_count($binaryString, '0') >= 36) {
-					echo 'That still didn\'t work! Try again with different items. <br/>';
+                    echo 'That still didn\'t work! Try again with different items. <br/>';
                     $usableCode = false;
                 } else {
                     $code = $newCode;
                 }
             } elseif ($op = 'and') {
-				if (substr_count($binaryString, '0') <= 12) {
-					echo 'The result code has too many holes punched, which makes for terrible alchemy. You try || alchemy instead. <br/>';
-					$usedOtherOp = true;
-				} elseif (substr_count($binaryString, '0') >= 36) {
-					echo 'The result code doesn\'t have enough holes punched, which makes for terrible alchemy. You try || alchemy instead. <br/>';
-					$usedOtherOp = true;
-				}
+                if (substr_count($binaryString, '0') <= 12) {
+                    echo 'The result code has too many holes punched, which makes for terrible alchemy. You try || alchemy instead. <br/>';
+                    $usedOtherOp = true;
+                } elseif (substr_count($binaryString, '0') >= 36) {
+                    echo 'The result code doesn\'t have enough holes punched, which makes for terrible alchemy. You try || alchemy instead. <br/>';
+                    $usedOtherOp = true;
+                }
 
                 $newCode = orCombine($code1, $code2);
                 $binaryString = breakdown($newCode);
                 $op = 'or';
                 if (substr_count($binaryString, '0') <= 12 || substr_count($binaryString, '0') >= 36) {
-					echo 'That still didn\'t work! Try again with different items. <br/>';
+                    echo 'That still didn\'t work! Try again with different items. <br/>';
                     $usableCode = false;
                 } else {
                     $code = $newCode;
@@ -148,8 +153,10 @@ if ($_SESSION['username'] != "") {
             }
         }
 
-		if ($usedOtherOp) { echo '<br/>'; }
-		
+        if ($usedOtherOp) {
+            echo '<br/>';
+        }
+
         if ($usableCode) {
             echo "Quick Creation Form<br><br><i>Information:</i>
     If you found a code that doesn't belong to an item, you can use this form to create one and have it available for use instantly!<br>
@@ -165,16 +172,19 @@ if ($_SESSION['username'] != "") {
                     $aok = true; //both items exist
                     $i1row = $i1rowo;
                     $i2row = $i2rowo;
-                    if ($op == "and") echo "Recipe: " . $i1row['name'] . " && " . $i2row['name'] . "<br />";
-                    elseif ($op == "or") echo "Recipe: " . $i1row['name'] . " || " . $i2row['name'] . "<br />";
+                    if ($op == "and") {
+                        echo "Recipe: " . $i1row['name'] . " && " . $i2row['name'] . "<br />";
+                    } elseif ($op == "or") {
+                        echo "Recipe: " . $i1row['name'] . " || " . $i2row['name'] . "<br />";
+                    }
                 }
             }
             if ($aok) {
                 $combine = "";
                 if ($op == "and") {
-                    $combine = andcombine($code1,$code2);
+                    $combine = andcombine($code1, $code2);
                 } elseif ($op == "or") {
-                    $combine = orcombine($code1,$code2);
+                    $combine = orcombine($code1, $code2);
                 } else {
                     echo "Error: invalid operation.<br />";
                 }
@@ -195,9 +205,11 @@ if ($_SESSION['username'] != "") {
                         echo "Description:<br /><textarea id='itemcreate' name='description' rows='6' cols='40'>" . $itemrow['description'] . "</textarea><br />";
                         $power1 = realpower($i1row);
                         $power2 = realpower($i2row);
-                        $ratio = max($power1,$power2) / min($power1,$power2);
-                        $bonus = (((-1/3)*(pow($ratio,2)))-($ratio*3)+(199/3)-3)/100;
-                        if ($bonus < 0) $bonus = 0;
+                        $ratio = max($power1, $power2) / min($power1, $power2);
+                        $bonus = (((-1 / 3) * (pow($ratio, 2))) - ($ratio * 3) + (199 / 3) - 3) / 100;
+                        if ($bonus < 0) {
+                            $bonus = 0;
+                        }
                         $maxpower = ceil(($power1 + $power2) * (1 + $bonus));
                         echo "Max weapon power allowed from this combination (including highest bonus): $maxpower<br />";
                         $_SESSION['maxpower'] = $maxpower;
@@ -267,7 +279,9 @@ For example, putting a 2 in grist A and a 3 in grist B will make the item's Gris
                         $i = 0;
                         while (!empty($possiblegrists[$i])) {
                             $thisgrist = explode(":", $possiblegrists[$i]);
-                            if($thisgrist[0]!='Artifact') echo $thisgrist[0] . " - <input type='text' name='" . $thisgrist[0] . "' /><br />";
+                            if ($thisgrist[0] != 'Artifact') {
+                                echo $thisgrist[0] . " - <input type='text' name='" . $thisgrist[0] . "' /><br />";
+                            }
                             $i++;
                         }
                         echo "Comments about this item - anything else you'd like to say to the devs about the item, such as possible effects or numerical themes in grist cost<br />";
@@ -288,7 +302,7 @@ For example, putting a 2 in grist A and a 3 in grist B will make the item's Gris
         echo "Operation: <select name='op'><option value='and'>&&</option><option value='or'>||</option></select><br />";
         echo "<input type='submit' value='Go!' /></form><br />";
     }
-    
+
     echo "If you find this editor too restrictive, you can use the <a href='fullitemcreate.php'>full item submission form</a> to submit an item idea the classic way.<br />";
 } else {
     echo "Log in to create items.";

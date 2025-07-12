@@ -9,11 +9,13 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/header.php';
 <script type="text/javascript" src="/js/jquery.tooltipster.min.js"></script>
 <?php
 
-if(isset($_GET['ID']))
+if (isset($_GET['ID'])) {
     $profiler = getChar(intval($_GET['ID']));
-else $profiler = $charrow;
+} else {
+    $profiler = $charrow;
+}
 
-if($profiler){
+if ($profiler) {
 
     $strifer = loadStriferow($profiler['wakeself']);
 
@@ -35,12 +37,12 @@ if($profiler){
     echo 'Symbol: <img id="imgchar" style="display:inline" src="' . $profiler['symbol'] . '"><br />';
 
 
-    if (!$profiler['inmedium'])
+    if (!$profiler['inmedium']) {
         echo "This player has not yet entered the medium. <br>Their land and strife stats will be visible here once they become relevant.<br>";
-    else {
+    } else {
         echo 'Echeladder rung: ' . $strifer['echeladder'] . '<br>';
-        echo 'Health Vial: <b>' . ceil(($strifer['health']/$strifer['maxhealth'])*100) . '%</b><br>';
-        echo 'Aspect Vial: <b>' . ceil(($strifer['energy']/$strifer['maxenergy'])*100) . '%</b><br>';
+        echo 'Health Vial: <b>' . ceil(($strifer['health'] / $strifer['maxhealth']) * 100) . '%</b><br>';
+        echo 'Aspect Vial: <b>' . ceil(($strifer['energy'] / $strifer['maxenergy']) * 100) . '%</b><br>';
         echo 'Land: The Land of ' . $profiler['land1'] . ' and ' . $profiler['land2'] . '<br>';
         //echo "Grists available on this land: " . implode(', ', $profiler[grist_type) . '<br>';
         echo "Consorts: " . $profiler['consort'] . "<br><br>";
@@ -48,55 +50,64 @@ if($profiler){
     $psession = mysqli_query($connection, "SELECT name FROM Sessions WHERE `ID` =" . $profiler['session'] . ";");
     $psessionarray = mysqli_fetch_array($psession);
     echo 'Session: <a href="/sessioninfo.php?session=' . $psessionarray['name'] . '">' . $psessionarray['name'] . "</a><br>";
-    if (isset($server))
+    if (isset($server)) {
         echo "Server Player: " . profileString($server['ID']) . "<br>";
-    else
+    } else {
         echo "Server Player: Not yet connected. <br>";
-    if (isset($client))
+    }
+    if (isset($client)) {
         echo "Client Player: " . profileString($client['ID']) . "<br>";
-    else
+    } else {
         echo "Client Player: Not yet connected. <br>";
+    }
 
-    if ($profiler['inmedium'])
+    if ($profiler['inmedium']) {
         echo 'Gates accessible: ' . $profiler['gatescleared'] . '<br>';
+    }
     $achievements = array(
-                        'medium' =>['[S] Enter', 'Enter the medium'],
-                        'ko'=>['You Tried', 'Get KO\'d'],
-                        'fatigue'=>['Weekend At Player\'s', 'It\'s time to stop clicking'],
-                        'deadconsort'=>['Black Liquid Sorrow', 'Visit the grave of a consort mercenary'],
-                        'itemfull'=>['Act 1 Nostalgia','Fill your inventory'],
-                        'assist'=>['Game Bro', 'Assist a fellow player on a strife and win'],
-                        'aspectheal'=>['Doctor Remix', 'Heal a fellow player by using an Aspect Pattern'],
-                        'allgrist'=>['Colours And Mayhem','Recycle a Perfectly Unique Object'],
-                        'boonshop'=>['LODS OF BOONE', 'Spend one hundred Boonbucks on the Consort Shop'],
-                        'fray3'=>['Fraymothree In The Morning', 'Get the full set of your Aspect\'s Fraymotifs'],
-                        'fullport'=>['Like Fucking Christmas Up In Here', 'Get fully equipped'],
-                        'ultweapon'=>['Nonanonacontanonactanonaliagonal Ultimatum','Equip an Ultimate Weapon'],
-                        'topeche'=>['Sike, That\'s The Right Number','Reach rung 612 of the Echeladder'],
-                        'dungeon1'=>['Tentacle Therapist','Kill the Kraken'],
-                        'dungeon2'=>['Here Come The Arms','Kill the Hekatonchire'],
-                        'dungeon3'=>['Killer Queen','Kill the Lich Queen'],
-                        'moonprince' =>['Princes Of The Incipisphere', 'Defeat a full set of the best your moon has to offer'],
-                        'gate7'=>['Clientship Aneurysm','Build your client\'s house up to Gate 7'],
-                        'denizen'=>['Screw The Choice','Defeat your denizen'],
-                        'thebug'=>['Achievement Name', 'Face The Bug'],
-                        'itemsub'=>['Not Another Sword','Submit a non-QIC item and get it greenlit'],
-                        'artsub'=>['Not Another Sword Pic','Submit art for an item and get it approved']
+                        'medium' => ['[S] Enter', 'Enter the medium'],
+                        'ko' => ['You Tried', 'Get KO\'d'],
+                        'fatigue' => ['Weekend At Player\'s', 'It\'s time to stop clicking'],
+                        'deadconsort' => ['Black Liquid Sorrow', 'Visit the grave of a consort mercenary'],
+                        'itemfull' => ['Act 1 Nostalgia','Fill your inventory'],
+                        'assist' => ['Game Bro', 'Assist a fellow player on a strife and win'],
+                        'aspectheal' => ['Doctor Remix', 'Heal a fellow player by using an Aspect Pattern'],
+                        'allgrist' => ['Colours And Mayhem','Recycle a Perfectly Unique Object'],
+                        'boonshop' => ['LODS OF BOONE', 'Spend one hundred Boonbucks on the Consort Shop'],
+                        'fray3' => ['Fraymothree In The Morning', 'Get the full set of your Aspect\'s Fraymotifs'],
+                        'fullport' => ['Like Fucking Christmas Up In Here', 'Get fully equipped'],
+                        'ultweapon' => ['Nonanonacontanonactanonaliagonal Ultimatum','Equip an Ultimate Weapon'],
+                        'topeche' => ['Sike, That\'s The Right Number','Reach rung 612 of the Echeladder'],
+                        'dungeon1' => ['Tentacle Therapist','Kill the Kraken'],
+                        'dungeon2' => ['Here Come The Arms','Kill the Hekatonchire'],
+                        'dungeon3' => ['Killer Queen','Kill the Lich Queen'],
+                        'moonprince' => ['Princes Of The Incipisphere', 'Defeat a full set of the best your moon has to offer'],
+                        'gate7' => ['Clientship Aneurysm','Build your client\'s house up to Gate 7'],
+                        'denizen' => ['Screw The Choice','Defeat your denizen'],
+                        'thebug' => ['Achievement Name', 'Face The Bug'],
+                        'itemsub' => ['Not Another Sword','Submit a non-QIC item and get it greenlit'],
+                        'artsub' => ['Not Another Sword Pic','Submit art for an item and get it approved']
                         );
-    $nachievement=sizeof($achievements);
-    $achieved=0;
-    foreach($achievements as $name => $achievement) if(getAchievement($profiler, $name)) $achieved++;
+    $nachievement = sizeof($achievements);
+    $achieved = 0;
+    foreach ($achievements as $name => $achievement) {
+        if (getAchievement($profiler, $name)) {
+            $achieved++;
+        }
+    }
     echo "<br>Achievement badges({$achieved}/{$nachievement}):<br><br>";
 
 
-    foreach($achievements as $name => $achievement){
-        if(getAchievement($profiler, $name))
+    foreach ($achievements as $name => $achievement) {
+        if (getAchievement($profiler, $name)) {
             echo '<span class="tooltip" title="&lt;img src=&quot;/images/achievements/'. $name . '.png&quot; style=&quot;float:left;margin-right:10px;&quot; /&gt; &lt;strong&gt;'. $achievement[0] .'&lt;/strong&gt;&lt;br&gt;'. '????' . '"><img src="/images/achievements/' . $name . '.png"></span>';
-        else
+        } else {
             echo '<span class="tooltip2" title="&lt;img src=&quot;/images/achievements/unknown.png&quot; style=&quot;float:left;margin-right:10px;&quot; /&gt; &lt;strong&gt;Unknown Achievement&lt;/strong&gt;&lt;br&gt;???"><img src="/images/achievements/unknown.png"></span>';
+        }
     }
+} else {
+    echo "Error retrieving player.";
 }
-else echo "Error retrieving player.";
 
 ?>
 <script>

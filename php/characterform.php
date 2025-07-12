@@ -1,1 +1,1 @@
-<?php header('Location: /?newchar'); ?>
+<?php header('Location: /?newchar');

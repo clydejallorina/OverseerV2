@@ -1,5 +1,14 @@
 {
     "require": {
         "vlucas/phpdotenv": "^5.5"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^6.12",
+        "orklah/psalm-strict-equality": "^3.1",
+        "orklah/psalm-strict-numeric-cast": "^2.1",
+        "orklah/psalm-not-empty": "^2.1",
+        "php-cs-fixer/shim": "^3.82",
+        "friendsofphp/php-cs-fixer": "*",
+        "squizlabs/php_codesniffer": "^3.13"
     }
 }
