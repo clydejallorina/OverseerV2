@@ -1,0 +1,34 @@
+name: Generate Builds and Test
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/**'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: 'Create dev env file'
+      run: |
+          touch .env
+          echo DB_HOSTNAME="database-dev" >> .env
+          echo DB_USERNAME="overseer" >> .env
+          echo DB_PASSWORD="overseer" >> .env
+          echo DB_DATABASE="OverseerV2" >> .env
+          echo OVERSEER_ROOT="/php/" >> .env
+          echo OVERSEER_PHP_SESSIONS_ROOT="/.session/" >> .env
+          echo SITE_HOSTNAME=v2.overseerreboot.xyz >> .env
+    - name: 'Run Docker build'
+      run: docker compose --profile dev up -d --build
+    - name: 'Sleep (wait for the services to spin up properly)'
+      run: sleep 10
+    - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
+      run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
