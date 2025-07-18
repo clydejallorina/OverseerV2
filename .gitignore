@@ -11,6 +11,7 @@ php/devtools/debuglog.txt
 php/devtools/cheatpolice.txt
 phpinfo.php
 .php-cs-fixer.cache
+.phpunit.result.cache
 
 /rust/target
 
