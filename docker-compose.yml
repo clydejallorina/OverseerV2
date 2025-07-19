@@ -9,10 +9,9 @@ services:
       args:
         - MYSQL_DATABASE=${DB_DATABASE}
     environment:
-      - MYSQL_USER=${DB_USERNAME}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     volumes:
       - "db_data:/var/lib/mysql/"
   
@@ -23,6 +22,11 @@ services:
       - dev
     ports:
       - 3306:3306
+    environment:
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
   
   php:
     &php
@@ -99,9 +103,7 @@ services:
     cap_add:
       - NET_ADMIN
     ports:
-      - '80:80'
-      - '443:443'
-      - '443:443/udp'
+      - 8000:8000
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
