@@ -5,6 +5,7 @@
     backupGlobals="false"
     colors="true"
     processIsolation="false"
+    requireCoverageMetadata="true"
     stopOnFailure="false"
 >
 

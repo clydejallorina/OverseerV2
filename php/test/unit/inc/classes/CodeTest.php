@@ -1,6 +1,6 @@
 <?php
 
-namespace Overseer\Test\Inc\Classes;
+namespace Overseer\Test;
 
 use Overseer\Code;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -42,7 +42,6 @@ final class CodeTest extends TestCase {
         ];
     }
 
-    #[Test]
     #[DataProvider('operationsDataProvider')]
     public function testOperations(
         string $codeA,
