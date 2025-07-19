@@ -14,6 +14,7 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     volumes:
       - "db_data:/var/lib/mysql/"
+    command: --lower_case_table_names=1
   
   database-dev:
     <<: *database
