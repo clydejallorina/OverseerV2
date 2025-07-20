@@ -1,6 +1,7 @@
 {
     "require": {
-        "vlucas/phpdotenv": "^5.5"
+        "vlucas/phpdotenv": "^5.5",
+        "cuyz/valinor": "^2.0"
     },
     "require-dev": {
         "vimeo/psalm": "^6.12",
