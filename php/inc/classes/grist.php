@@ -125,7 +125,7 @@ class Grist
      *
      * @return string serialized gristArray
      */
-    public function export()
+    public function export(): string
     {
         return serialize($this->_gristArray);
     }//end export()
@@ -139,7 +139,7 @@ class Grist
      *
      * @return string imploded gristArray
      */
-    public function exportOld()
+    public function exportOld(): string
     {
         // Start with a blank string.
         $gristOutput = "";
