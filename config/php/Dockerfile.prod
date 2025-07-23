@@ -19,6 +19,7 @@ RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
 
 # Copy project files
 COPY ./php/ /var/www/html/
+RUN chown -R www-data /var/www/html/
 
 # Run setup
 RUN apt-get update
