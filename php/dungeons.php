@@ -143,6 +143,7 @@ if (empty($_SESSION['character'])) {
             $row = $charrow['dungeonrow'];
             $col = $charrow['dungeoncol'];
             $canmove = false;
+			$newroom = null;
             if (!empty($_POST['targetdir'])) { //player wants to move to a new room
                 $tdir = $_POST['targetdir'];
                 $trow = $row;
@@ -503,7 +504,7 @@ if (empty($_SESSION['character'])) {
                 }
                 while ($j <= $rightmost) {
                     $thisroom = strval($j) . "," . strval($i);
-                    $roomstr = $dungeonstring[$j][$i];
+                    $roomstr = isset($dungeonstring[$j][$i]) ? $dungeonstring[$j][$i] : null;
                     $blank = true;
                     if (!empty($roomstr)) {
                         $map = explode(":", $roomstr);
@@ -568,10 +569,8 @@ if (empty($_SESSION['character'])) {
 
                     }
                     echo 'background-repeat:no-repeat;">';
-                    if ($thisroom == $currentroom) { //This is the current room.
+                    if ($thisroom == $currentroom) {
                         echo "<img src='" . $charrow['symbol'] . "' title='You'>";
-                    } elseif (!empty($playerarray[$room])) { //somebody else is in this room
-                        echo "<img src='" . $symbolarray[$room] . "' title='" . $playerarray[$room] . "'>";
                     } else {
                         echo "<img src='/images/symbols/nobody.png'>";
                     }
