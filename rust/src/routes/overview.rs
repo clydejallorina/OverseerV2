@@ -14,13 +14,15 @@ pub async fn overview_get(character: Character) -> Result<impl IntoResponse> {
     Ok(HtmlTemplate(OverviewTemplate {
         character: character.clone(),
         server_player: None,
-        background: if character.dreaming_status == "Awake" {
-            "".to_string()
+        background: if character.dreaming_status == "Dreaming" {
+            Some(
+                character
+                    .dreamer
+                    .clone()
+                    .ok_or(Error::ShouldHaveDreamer(character.id))?,
+            )
         } else {
-            character
-                .dreamer
-                .clone()
-                .ok_or(Error::ShouldHaveDreamer(character.id))?
+            None
         },
         announcements: vec![
             "Welcome to the game!".to_string(),
@@ -51,7 +53,7 @@ pub async fn overview_get(character: Character) -> Result<impl IntoResponse> {
 pub struct OverviewTemplate {
     pub character: Character,
     pub server_player: Option<Character>,
-    pub background: String,
+    pub background: Option<String>,
     pub announcements: Vec<String>,
     pub character_dreamer: CharacterDreamerTemplate,
     pub character_colour: CharacterColourTemplate,

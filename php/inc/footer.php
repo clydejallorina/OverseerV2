@@ -13,7 +13,7 @@ if ($newinv != $charrow['inventory'] || $newmeta != $charrow['metadata']) { //in
 
 checkNotifications($charrow);
 $symbol = "'/" . $me->symbol . "'";
-$background = 'no';
+$background = '';
 if ($charrow['dreamingstatus'] == 'Prospit') {
     $background = 'prospit';
 } elseif ($charrow['dreamingstatus'] == 'Derse') {
@@ -208,11 +208,13 @@ if ($announcements[0] != '') {
     </script>
 
     <!-- Derse/Prospit backgrounds -->
+	<?php if (!empty($background)): ?>
     <script type="text/javascript">
     $(document).ready(function() {
         $('body').css('background-image', 'url(/images/Backgrounds/<?php echo $background;?>background.jpg)');
     	});
-	</script>	
+	</script>
+	<?php endif; ?>
 
 	<!-- Scrollbars for banner-->
 	<script> $(".nano").nanoScroller(); </script>
