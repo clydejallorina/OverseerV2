@@ -1,4 +1,10 @@
 {
+    "autoload": {
+        "classmap": ["inc/lib/", "inc/classes/"]
+    },
+    "autoload-dev": {
+        "classmap": ["test/unit/inc/classes/"]
+    },
     "require": {
         "vlucas/phpdotenv": "^5.5",
         "cuyz/valinor": "^2.0"

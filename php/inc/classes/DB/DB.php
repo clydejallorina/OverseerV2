@@ -4,7 +4,7 @@ namespace Overseer\DB;
 
 use Exception;
 use mysqli;
-use Overseer\Validation\Validator;
+use Overseer\Caster\Caster;
 
 /**
  * The DB class is (or at least should be) the only way that we interact with the
@@ -23,10 +23,10 @@ class DB {
     private static function initializeConnection(): void {
         if (self::$dbConnection === null) {
             self::$dbConnection = mysqli_connect(
-                hostname: $hostname ?? $_ENV['DB_HOSTNAME'],
-                username: $username ?? $_ENV['DB_USERNAME'],
-                password: $password ?? $_ENV['DB_PASSWORD'],
-                database: $database ?? $_ENV['DB_DATABASE'],
+                hostname: $_ENV['DB_HOSTNAME'],
+                username: $_ENV['DB_USERNAME'],
+                password: $_ENV['DB_PASSWORD'],
+                database: $_ENV['DB_DATABASE'],
             );
         }
     }
@@ -46,9 +46,7 @@ class DB {
         array $values,
         string $returnClass,
     ): array {
-        if (self::$dbConnection === null) {
-            self::initializeConnection();
-        }
+        self::initializeConnection();
 
         if (str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
@@ -62,7 +60,7 @@ class DB {
 
         $results = [];
         while ($row = $result->fetch_assoc()) {
-            $results[] = Validator::arrayToObject($row, $returnClass);
+            $results[] = Caster::arrayToObject($row, $returnClass);
         }
         
         return $results;
@@ -86,9 +84,7 @@ class DB {
         array $values,
         string $returnClass,
     ): ?object {
-        if (self::$dbConnection === null) {
-            self::initializeConnection();
-        }
+        self::initializeConnection();
 
         if (str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
@@ -110,7 +106,7 @@ class DB {
             return null;
         }
         
-        return Validator::arrayToObject($row, $returnClass);
+        return Caster::arrayToObject($row, $returnClass);
     }
 
     // TODO: Implement INSERT and DELETE
