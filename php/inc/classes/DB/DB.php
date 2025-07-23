@@ -15,10 +15,15 @@ use Overseer\Caster\Caster;
 class DB {
     private static ?mysqli $dbConnection = null;
 
+    public function __construct() {
+        self::initializeConnection();
+    }
+
     /**
      * Initializes the connection if there's no connection already set
      * 
      * Going to be called for every query to ensure that we do have an actual
+     * connection to work with here.
      */
     private static function initializeConnection(): void {
         if (self::$dbConnection === null) {
@@ -33,7 +38,7 @@ class DB {
 
     /**
      * @template T
-     * @param string $sqlQuery The SQL query as a sprintf-formatted string
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
      * @param string $expectedTypes Expected types of the values to be used in the query
      * @param list<mixed> $values Values to be used in the query
      * @param class-string<T> $returnClass Class of the object to be returned by this function
@@ -41,13 +46,11 @@ class DB {
      * 
      * @throws Exception Throws a generic exception whenever non-SELECT queries are ran
      */
-    public static function fetchAll(
+    public function fetchAll(
         string $sqlQuery,
         array $values,
         string $returnClass,
     ): array {
-        self::initializeConnection();
-
         if (str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
         }
@@ -71,7 +74,7 @@ class DB {
      * Remember to add a LIMIT 1 at the end of your query!
      * 
      * @template T
-     * @param string $sqlQuery The SQL query as a sprintf-formatted string
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
      * @param string $expectedTypes Expected types of the values to be used in the query
      * @param list<mixed> $values Values to be used in the query
      * @param class-string<T> $returnClass Class of the object to be returned by this function
@@ -79,13 +82,11 @@ class DB {
      * 
      * @throws Exception Throws a generic exception whenever non-SELECT queries are ran
      */
-    public static function fetchFirst(
+    public function fetchFirst(
         string $sqlQuery,
         array $values,
         string $returnClass,
     ): ?object {
-        self::initializeConnection();
-
         if (str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
         }
@@ -109,5 +110,49 @@ class DB {
         return Caster::arrayToObject($row, $returnClass);
     }
 
-    // TODO: Implement INSERT and DELETE
+    /**
+     * Runs an INSERT INTO query and returns the first ID of the inserted objects (if multiple)
+     * 
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
+     * @param string $expectedTypes Expected types of the values to be used in the query
+     */
+    public function insert(
+        string $sqlQuery,
+        array $values,
+    ): int {
+        if (str_starts_with(strtolower($sqlQuery), 'insert into')) {
+            throw new DBException('This function only accepts INSERT INTO queries!');
+        }
+
+        $result = self::$dbConnection->execute_query($sqlQuery, $values);
+        if ($result === false) {
+            $error = self::$dbConnection->error;
+            throw new DBException("Query failed to execute! ({$error})");
+        }
+
+        return (int)self::$dbConnection->insert_id;
+    }
+
+    /**
+     * Runs a DELETE query and returns true if successful
+     * 
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
+     * @param string $expectedTypes Expected types of the values to be used in the query
+     */
+    public function delete(
+        string $sqlQuery,
+        array $values,
+    ): bool {
+        if (str_starts_with(strtolower($sqlQuery), 'delete')) {
+            throw new DBException('This function only accepts DELETE queries!');
+        }
+
+        $result = self::$dbConnection->execute_query($sqlQuery, $values);
+        if ($result === false) {
+            $error = self::$dbConnection->error;
+            throw new DBException("Query failed to execute! ({$error})");
+        }
+
+        return (bool)$result;
+    }
 }
