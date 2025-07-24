@@ -51,7 +51,7 @@ class DB {
         array $values,
         string $returnClass,
     ): array {
-        if (str_starts_with(strtolower($sqlQuery), 'select')) {
+        if (!str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
         }
 
@@ -87,7 +87,7 @@ class DB {
         array $values,
         string $returnClass,
     ): ?object {
-        if (str_starts_with(strtolower($sqlQuery), 'select')) {
+        if (!str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
         }
 
@@ -120,7 +120,7 @@ class DB {
         string $sqlQuery,
         array $values,
     ): int {
-        if (str_starts_with(strtolower($sqlQuery), 'insert into')) {
+        if (!str_starts_with(strtolower($sqlQuery), 'insert into')) {
             throw new DBException('This function only accepts INSERT INTO queries!');
         }
 
@@ -143,7 +143,7 @@ class DB {
         string $sqlQuery,
         array $values,
     ): bool {
-        if (str_starts_with(strtolower($sqlQuery), 'delete')) {
+        if (!str_starts_with(strtolower($sqlQuery), 'delete')) {
             throw new DBException('This function only accepts DELETE queries!');
         }
 
