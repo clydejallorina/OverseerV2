@@ -297,7 +297,7 @@ if (empty($_SESSION['character'])) {
                 $irow[$newequip] = mysqli_fetch_array($eresult);
             }
             $meta = explode(":", $_SESSION['imeta'][$i]);
-            if ($meta[0] % 2 == 1) { //item is available
+            if (!empty($meta[0]) && $meta[0] % 2 == 1) { //item is available
                 $itemlist .= "<option value='$i'>" . $irow[$newequip]['name'] . "</option>";
             }
         }
