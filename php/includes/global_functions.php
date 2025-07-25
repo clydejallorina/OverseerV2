@@ -496,6 +496,7 @@ function chainArray($charrow)
     if ($charrow['gatescleared'] >= 2 && !$auto) { //Can access /second/ gate #CANON. Check out access chain, but no need if auto is true
         $currentrow = $charrow;
         $nobreak = true; // fix an error caused by $nobreak not being defined yet
+		$minus3row = $minus2row = $minus1row = []; // ditto
         while (($currentrow['server'] != $charrow['ID']) && ($currentrow['server'] != 0) && $nobreak) {
             //Above: Keep checking as long as there's a server player that isn't this player.
             $nobreak = false;
