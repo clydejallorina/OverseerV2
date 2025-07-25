@@ -3,7 +3,7 @@
 namespace Overseer\DTO;
 
 /**
- * DTO for the Character table in the DB
+ * Data transfer object for the Character table in the DB
  * 
  * @api
  */
