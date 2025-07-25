@@ -688,7 +688,6 @@ function strifeInit($charrow): void
                     $bonuses[$bonus] = 0;
                 }
                 $bonuses[$bonus] += $wrow[$bonus]; //add bonus amount to total bonuses
-                $n++;
             }
             if ($weapon) { //is a weapon, add power
                 $powerplus = min($wrow['power'], $limit);
@@ -710,15 +709,13 @@ function strifeInit($charrow): void
     if ($equippedcomputer != $charrow['equippedcomputer']) {
         mysqli_query($connection, "UPDATE `Characters` SET `equippedcomputer` = " . $equippedcomputer . " WHERE `Characters`.`ID` = " . $charrow['ID'] . " LIMIT 1;");
     }
-    $n = 0;
-    while ($n < 9) { //go through each bonus one last time, this time including defense
+    for ($n = 0; $n <= 8; $n++) { //go through each bonus one last time, this time including defense
         $bonus = getBonusname($n);
         if (empty($bonuses[$bonus])) {
             $bonuses[$bonus] = 0;
         }
         $wakebonuses .= strtoupper($bonus) . ":1:" . strval(min($bonuses[$bonus], $limit)) . "|"; //add final amount to bonus str. Duration 1 so that when put into the bonus field it only lasts 1 turn
         //Duration is because we put the equipbonuses field into the bonuses field every round
-        $n++;
     }
     //We do an ability check here to grab abilities relevant to initialization. It happens last so it can affect existing values.
     //Not many abilities will go here. Most will be done "on the fly" in striferesolve
