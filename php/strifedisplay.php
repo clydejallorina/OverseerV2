@@ -289,22 +289,18 @@ if ($striferow['strifeID'] == 0 || empty($striferow['strifeID'])) { //This user 
                 echo $strifers[$i]['name'] . ":<br />";
                 $activestr = strval($strifers[$i]['ID']) . "active";
                 $passivestr = strval($strifers[$i]['ID']) . "passive";
-                $bonusarray = array("AGGRIEVE" => 0, "AGGRESS" => 0, "ASSAIL" => 0, "ASSAULT" => 0, "ABUSE" => 0, "ACCUSE" => 0, "ABJURE" => 0, "ABSTAIN" => 0);
+                $bonusarray = array("AGGRIEVE" => 0, "AGGRESS" => 0, "ASSAIL" => 0, "ASSAULT" => 0, "ABUSE" => 0, "ACCUSE" => 0, "ABJURE" => 0, "ABSTAIN" => 0, "DEFENSE" => 0);
                 $bonuses = explode("|", $strifers[$i]['bonuses']); //We evaluate command bonuses here so we can print them
-                $j = 0;
-                while (!empty($bonuses[$j])) { //We still have a bonus to evaluate.
+                for ($j = 0; !empty($bonuses[$j]); $j++) { //We still have a bonus to evaluate.
                     $currentbonus = explode(":", $bonuses[$j]);
                     $value = intval($currentbonus[2]);
                     $bonusarray[$currentbonus[0]] += $value; //Won't do anything if it's not for a strife command, so we don't care.
-                    $j++;
                 }
                 $bonuses = explode("|", $strifers[$i]['equipbonuses']); //We evaluate command bonuses here so we can print them
-                $j = 0;
-                while (!empty($bonuses[$j])) { //We still have a bonus to evaluate.
+                for ($j = 0; !empty($bonuses[$j]); $j++) { //We still have a bonus to evaluate.
                     $currentbonus = explode(":", $bonuses[$j]);
                     $value = intval($currentbonus[2]);
                     $bonusarray[$currentbonus[0]] += $value; //Won't do anything if it's not for a strife command, so we don't care.
-                    $j++;
                 }
                 //Build select statement. Set the defaults to lastactive and lastpassive.
                 $select = "<select name='" . $activestr . "'>
