@@ -679,8 +679,7 @@ function strifeInit($charrow): void
         if ($wid != 0) { //if there's actually something equipped here
             $wresult = mysqli_query($connection, "SELECT * FROM `Captchalogue` WHERE `ID` = $wid");
             $wrow = mysqli_fetch_array($wresult);
-            $n = 0;
-            while ($n < 8) { //go through each bonus
+            for ($n = 0; $n <= 8; $n++) { //go through each bonus
                 $bonus = getBonusname($n);
                 if (empty($wrow[$bonus])) {
                     $wrow[$bonus] = 0;
