@@ -72,7 +72,7 @@ if (empty($_SESSION['username'])) {
         $i = $_POST['eqweapon'];
         $meta = explode(":", $_SESSION['imeta'][$i]);
         $canequip = false;
-        if ($meta[0] % 2 == 1) { //odd-numbered first arg, item is available
+        if (!empty($meta[0]) && $meta[0] % 2 == 1) { //odd-numbered first arg, item is available
             $eresult = mysqli_query($connection, "SELECT * FROM Captchalogue WHERE ID = " . $_SESSION['inv'][$i]);
             $erow[$_SESSION['inv'][$i]] = mysqli_fetch_array($eresult);
             if (!empty($erow[$_SESSION['inv'][$i]]['abstratus']) && $erow[$_SESSION['inv'][$i]]['abstratus'] != "notaweapon") { //item is a weapon
