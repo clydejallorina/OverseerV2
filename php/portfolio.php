@@ -325,7 +325,7 @@ if (empty($_SESSION['username'])) {
                 }
             }
         } else {
-            if ($thisequip[1] == $_POST['unequipid']) { //we're unequipping this
+            if (!empty($_POST['unequipid']) && $thisequip[1] == $_POST['unequipid']) { //we're unequipping this
                 if ($thisequip[0] == $_POST['unequip']) { //so that we only do this once
                     $charrow['invslots'] += 1; //the card that holds this item is returned to your inventory
                     $success = addItem($charrow, $_POST['unequipid']); //should always work since we just added the inv slot
