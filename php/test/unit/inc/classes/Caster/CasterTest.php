@@ -3,6 +3,7 @@
 namespace Overseer\Test\Caster;
 
 use DateTimeImmutable;
+use Exception;
 use Overseer\Caster\Caster;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -75,5 +76,20 @@ final class CasterTest extends TestCase {
         );
 
         $this->assertEquals($testDTO, $castResult);
+    }
+
+    public function testInvalidCast(): void {
+        $this->expectException(Exception::class);
+
+        $testArray = [
+            'integer' => 'invalid',
+            'string' => 'str',
+            'boolean' => true,
+        ];
+
+        Caster::arrayToObject(
+            input: $testArray,
+            classString: LocationDTO::class,
+        );
     }
 }
