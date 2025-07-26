@@ -501,6 +501,7 @@ function chainArray($charrow)
         while (($currentrow['server'] != $charrow['ID']) && ($currentrow['server'] != 0) && $nobreak) {
             //Above: Keep checking as long as there's a server player that isn't this player.
             $nobreak = false;
+            /** @var array<array-key, mixed> */
             $minus3row = $minus2row;
             $minus2row = $minus1row;
             $minus1row = $currentrow; //These might not all exist, but the ones that don't will just be empty so they'll fail the relevant checks
