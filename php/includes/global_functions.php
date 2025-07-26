@@ -495,6 +495,8 @@ function chainArray($charrow)
     } //Access to your own Land is granted when you reach your first Gate.
     if ($charrow['gatescleared'] >= 2 && !$auto) { //Can access /second/ gate #CANON. Check out access chain, but no need if auto is true
         $currentrow = $charrow;
+        $minus2row = [];
+        $minus1row = [];
         $nobreak = true; // fix an error caused by $nobreak not being defined yet
         while (($currentrow['server'] != $charrow['ID']) && ($currentrow['server'] != 0) && $nobreak) {
             //Above: Keep checking as long as there's a server player that isn't this player.
@@ -504,13 +506,22 @@ function chainArray($charrow)
             $minus1row = $currentrow; //These might not all exist, but the ones that don't will just be empty so they'll fail the relevant checks
             $currentrow = $duderow[$currentrow['server']]; //Guaranteed to exist due to the while condition
             //echo "DEBUG: Checking gate availability for " . $currentrow['name'] . "<br />";
-            if ($currentrow['gatescleared'] >= 6 && $minus3row['gatescleared'] >= 6) {
+            if ($currentrow['gatescleared'] >= 6
+                && array_key_exists('gatescleared', $minus3row)
+                && $minus3row['gatescleared'] >= 6
+            ) {
                 $nobreak = true;
             }
-            if ($currentrow['gatescleared'] >= 4 && $minus2row['gatescleared'] >= 4) {
+            if ($currentrow['gatescleared'] >= 4
+                && array_key_exists('gatescleared', $minus2row)
+                && $minus2row['gatescleared'] >= 4
+            ) {
                 $nobreak = true;
             }
-            if ($currentrow['gatescleared'] >= 2 && $minus1row['gatescleared'] >= 2) {
+            if ($currentrow['gatescleared'] >= 2
+                && array_key_exists('gatescleared', $minus1row)
+                && $minus1row['gatescleared'] >= 2
+            ) {
                 $nobreak = true;
             }
             if ($nobreak) {
