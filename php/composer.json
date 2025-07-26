@@ -1,6 +1,6 @@
 {
     "autoload": {
-        "classmap": ["inc/lib/", "inc/classes/"]
+        "classmap": ["inc/", "includes/"]
     },
     "autoload-dev": {
         "classmap": ["test/unit/inc/classes/"]
