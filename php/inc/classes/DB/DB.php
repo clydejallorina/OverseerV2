@@ -75,7 +75,6 @@ class DB {
      * 
      * @template T
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
-     * @param string $expectedTypes Expected types of the values to be used in the query
      * @param list<mixed> $values Values to be used in the query
      * @param class-string<T> $returnClass Class of the object to be returned by this function
      * @return T|null
@@ -145,6 +144,29 @@ class DB {
     ): bool {
         if (!str_starts_with(strtolower($sqlQuery), 'delete')) {
             throw new DBException('This function only accepts DELETE queries!');
+        }
+
+        $result = self::$dbConnection->execute_query($sqlQuery, $values);
+        if ($result === false) {
+            $error = self::$dbConnection->error;
+            throw new DBException("Query failed to execute! ({$error})");
+        }
+
+        return (bool)$result;
+    }
+
+    /**
+     * Runs an UPDATE query and returns true if successful
+     * 
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
+     * @param string $expectedTypes Expected types of the values to be used in the query
+     */
+    public function update(
+        string $sqlQuery,
+        array $values,
+    ): bool {
+        if (!str_starts_with(strtolower($sqlQuery), 'update')) {
+            throw new DBException('This function only accepts UPDATE queries!');
         }
 
         $result = self::$dbConnection->execute_query($sqlQuery, $values);
