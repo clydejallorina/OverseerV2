@@ -418,17 +418,17 @@ while ($i <= $n) {
                 mysqli_query($connection, "UPDATE Characters set wakefatigue = $newfatigue, dungeonrow = $olddungeonrow, dungeoncol = $olddungeoncol WHERE Characters.ID = " . $strifers[$i]['owner'] . " LIMIT 1;");
             }
             if ($strifers[$i]['leader'] != 0) { //This strifer was the leader! We'll need to try and find another one
-                $j = 0;
+                $j = 1; // $strifers is a 1-indexed array (for some reason)
                 $anotherplayer = false;
                 while ($j <= $n && !$anotherplayer) {
-                    if ($strifers[$j]['side'] == $playerside && $strifers[$j]['Aspect'] != "") { //Found one
+                    if ($strifers[$j]['side'] == $playerside && $strifers[$j]['aspect'] != "") { //Found one
                         $strifers[$j]['leader'] = 1;
                         $anotherplayer = true;
                     }
                     $j++;
                 }
                 if (!$anotherplayer) { //That was the last player character in the strife on that side. Remove that side from the strife.
-                    $j = 0;
+                    $j = 1; // $strifers is a 1-indexed array (for some reason)
                     while ($j <= $n) {
                         if ($strifers[$j]['side'] == $playerside) {
                             $strifers[$j] = endStrife($strifers[$j]);

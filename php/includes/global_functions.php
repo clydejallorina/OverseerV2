@@ -736,8 +736,11 @@ function strifeInit($charrow): void
     while (!empty($abilities[$i])) { //We've found an ability
         switch ($abilities[$i]) {
             case "2": //Life's Bounty, ID 2
-                $wakerow['maxhealth'] = ceil($wakerow['maxhealth'] * 1.15);
-                $dreamrow['maxhealth'] = ceil($dreamrow['maxhealth'] * 1.15);
+                // TODO: Actually implement what this is (these two rows are not initialized)
+                //       Depending on how this would actually work, this can be done instantly
+                //       using a single query to update both strifers' rows
+                // $wakerow['maxhealth'] = ceil($wakerow['maxhealth'] * 1.15);
+                // $dreamrow['maxhealth'] = ceil($dreamrow['maxhealth'] * 1.15);
                 break;
             default:
                 break;
