@@ -360,7 +360,7 @@ if (empty($_SESSION['character'])) {
                             $message .= $row['grist'] . " ";
                         }
                         $message .= $row['name'] . "<br />";
-                        if ($row['Aspect'] != "") { //There's another player in the strife! We're not interested in it.
+                        if ($row['aspect'] != "") { //There's another player in the strife! We're not interested in it.
                             $enemypresent = false;
                             $playerpresent = true;
                         }

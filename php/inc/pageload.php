@@ -29,8 +29,8 @@ if (!empty($_SESSION['username'])) {
         $invslots = count($_SESSION['inv']);
         $_SESSION['imeta'] = explode("|", $charrow['metadata'], $invslots);
         $fatiguetimer = 100;
-        if (!empty($charrow['Aspect'])) {
-            if ($charrow['Aspect'] == "Time") {
+        if (!empty($charrow['aspect'])) {
+            if ($charrow['aspect'] == "Time") {
                 $fatiguetimer = floor($fatiguetimer * 0.9);
             } //Hack - Temporal Warp. Not worth checking abilities just for this.
         }
