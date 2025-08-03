@@ -228,7 +228,7 @@ if (empty($charrow)) {
             if ($passive) {
                 $aspectpower *= ($classrow['passivefactor'] / 100);
             }
-            $resistance = findResist($targetrow['resistances'], $charrow['Aspect']);
+            $resistance = findResist($targetrow['resistances'], $charrow['aspect']);
             $resistance = 1 - ($resistance / 100);
             $damage = ceil(($values['damage'] * $aspectpower * $classrow['Damage'] * $aspectrow['Damage'] * $resistance) / $damagedivider);
             $powerdown = ceil(($values['powerdown'] * $aspectpower * $classrow['Power_down'] * $aspectrow['Power_down'] * $resistance) / $powerdowndivider);

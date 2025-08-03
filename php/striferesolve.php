@@ -120,7 +120,11 @@ if ($striferow['strifeID'] == 0 || empty($striferow['strifeID'])) { //This user 
             //The below line subtracts the amount of this strifer's defensive power that got into the teamwide boost from the boost they receive.
             //This is to prevent them from getting to double-up on their own defensive power due to teamwork. (Otherwise two players with 100% teamwork
             //working together would have 3x defense each, which is an issue)
-            $bonus = $defarray[$strifers[$i]['side']] - floor($power['defense'] * ($strifers[$i]['teamwork'] / 100) * ($teamworkarray[$strifers[$i]['side']] / 100));
+            $striferSideDefense = (int)$defarray[$strifers[$i]['side']] ?? 0;
+            $striferDefense = $power['defense'] ?? 0;
+            $striferInnateTeamwork = (int)$strifers[$i]['teamwork'] ?? 0;
+            $teamworkBonus = (int)$teamworkarray[$strifers[$i]['side']] ?? 0;
+            $bonus = $striferSideDefense - (int)floor($striferDefense * ($striferInnateTeamwork / 100) * ($teamworkBonus / 100));
             if (!empty($defarray[$strifers[$i]['side']])) {
                 $strifers[$i]['bonuses'] .= "DEFENSE:1:" . strval($bonus) . "|";
             }
