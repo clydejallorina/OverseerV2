@@ -12,7 +12,9 @@
 	@static_routes expression {path}.endsWith(".css") || {path}.endsWith(".js") || {path}.endsWith(".png") || {path}.endsWith(".jpg") || {path}.endsWith(".gif") || {path}.endsWith(".svg") || {path}.endsWith(".ico") || {path}.endsWith(".ttf")
 
 	basic_auth /phpmyadmin/* {
-		overseer $2a$14$hOVtJYq2ncTgLJXTMt4vIeGMRfPrDamnYx.l9JEf6NcDCbUnOcJ2K
+		# By default, this password is 'hunter2'. This WILL be changed
+		# via environment variables in the production environment.
+		overseer {$PHPMYADMIN_AUTH:$2a$14$hamTMPfXzh6y14gNyeFShOXB.Vkylc4x40GttYhTVtWu5fp1iWyEW}
 	}
 
 	handle_path /phpmyadmin/* {

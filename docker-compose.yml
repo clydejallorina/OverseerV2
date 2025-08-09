@@ -141,6 +141,7 @@ services:
       - RUST_URI=http://rust:8010
       - PHP_URI=http://php:9000
       - PHPMYADMIN_URI=http://phpmyadmin
+      - PHPMYADMIN_AUTH=${PHPMYADMIN_AUTH}
     depends_on:
       - php
       - rust
