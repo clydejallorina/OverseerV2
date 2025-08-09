@@ -27,6 +27,7 @@ final class Session
     public string $creator;
     /** @var list<int> List of IDs of characters in the session */
     public array $members;
+    /** @var string bcrypt-encoded password string */
     public string $password;
     public int $battlefieldPower;
     public Atheneum $atheneum;
