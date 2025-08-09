@@ -29,6 +29,33 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
   
+  phpmyadmin:
+    &phpmyadmin
+    build:
+      dockerfile: ./config/myadmin/Dockerfile
+    environment:
+      - PMA_HOST=database
+      - PMA_USER=${DB_USERNAME}
+      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_ABSOLUTE_URI=https://v2.overseerreboot.xyz/phpmyadmin/
+    profiles:
+      - prod
+    volumes:
+      - phpmyadmin_sessions:/sessions:rw
+  
+  phpmyadmin-dev:
+    <<: *phpmyadmin
+    environment:
+      - PMA_HOST=database-dev
+      - PMA_USER=${DB_USERNAME}
+      - PMA_PASSWORD=${DB_PASSWORD}
+      - PMA_PORT=3306
+      - PMA_ABSOLUTE_URI=http://localhost:8000/phpmyadmin/
+    profiles:
+      - dev
+    ports:
+      - 8080:80
+  
   php:
     &php
     profiles:
@@ -113,9 +140,11 @@ services:
       - SITE_HOSTNAME=${SITE_HOSTNAME}
       - RUST_URI=http://rust:8010
       - PHP_URI=http://php:9000
+      - PHPMYADMIN_URI=http://phpmyadmin
     depends_on:
       - php
       - rust
+      - phpmyadmin
 
   proxy-dev:
     <<: *proxy
@@ -125,14 +154,17 @@ services:
       - SITE_HOSTNAME=http://localhost:8000
       - RUST_URI=http://rust-dev:8010
       - PHP_URI=http://php-dev:9000
+      - PHPMYADMIN_URI=http://phpmyadmin-dev
     ports:
       - 8000:8000
     depends_on:
       - php-dev
       - rust-dev
+      - phpmyadmin-dev
 
 volumes:
   db_data:
   session_data:
   caddy_data:
   caddy_config:
+  phpmyadmin_sessions:

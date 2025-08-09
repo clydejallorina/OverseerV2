@@ -11,6 +11,16 @@
 	@php_routes expression {path}.endsWith(".php") || {path} == "/"
 	@static_routes expression {path}.endsWith(".css") || {path}.endsWith(".js") || {path}.endsWith(".png") || {path}.endsWith(".jpg") || {path}.endsWith(".gif") || {path}.endsWith(".svg") || {path}.endsWith(".ico") || {path}.endsWith(".ttf")
 
+	basic_auth /phpmyadmin/* {
+		overseer $2a$14$hOVtJYq2ncTgLJXTMt4vIeGMRfPrDamnYx.l9JEf6NcDCbUnOcJ2K
+	}
+
+	handle_path /phpmyadmin/* {
+		reverse_proxy {$PHPMYADMIN_URI} {
+			header_up X-Real-IP {client_ip}
+		}
+	}
+
 	reverse_proxy @php_routes {$PHP_URI} {
 		header_up X-Real-IP {client_ip}
 	}
