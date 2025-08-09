@@ -20,14 +20,14 @@ final class SessionTest extends TestCase {
     public function testLoadBySessionId(): void {
         $sessionId = 1;
         $dto = new SessionDatabaseDTO(
-                id: $sessionId,
-                name: 'Test Session',
-                creator: '1',
-                members: '1|2|3|',
-                password: '',
-                battlefieldPower: 10,
-                atheneum: '',
-                exchange: 2,
+            id: $sessionId,
+            name: 'Test Session',
+            creator: '1',
+            members: '1|2|3|',
+            password: '',
+            battlefieldPower: 10,
+            atheneum: '',
+            exchange: 2,
         );
 
         $this->dbMock->expects($this->once())
