@@ -17,12 +17,12 @@ jobs:
       run: |
           touch .env
           echo DB_HOSTNAME="database" >> .env
-          echo DB_USERNAME="${{ secrets.DB_USERNAME }}" >> .env
-          echo DB_PASSWORD="${{ secrets.DB_PASSWORD }}" >> .env
+          echo DB_USERNAME='${{ secrets.DB_USERNAME }}' >> .env
+          echo DB_PASSWORD='${{ secrets.DB_PASSWORD }}' >> .env
           echo DB_DATABASE="overseer_v2" >> .env
           echo OVERSEER_ROOT="/php/" >> .env
           echo OVERSEER_PHP_SESSIONS_ROOT="/.session/" >> .env
           echo SITE_HOSTNAME=http://localhost:8000 >> .env
-          echo PHPMYADMIN_AUTH="${{ secrets.PHPMYADMIN_AUTH }}" >> .env
+          echo PHPMYADMIN_AUTH='${{ secrets.PHPMYADMIN_AUTH }}' >> .env
           docker compose stop $(docker compose ps --services)
           docker compose --profile prod up -d --build
