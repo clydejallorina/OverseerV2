@@ -38,6 +38,7 @@ services:
       - PMA_USER=${DB_USERNAME}
       - PMA_PASSWORD=${DB_PASSWORD}
       - PMA_ABSOLUTE_URI=https://v2.overseerreboot.xyz/phpmyadmin/
+      - BLOWFISH_SECRET=${BLOWFISH_SECRET}
     profiles:
       - prod
     volumes:
