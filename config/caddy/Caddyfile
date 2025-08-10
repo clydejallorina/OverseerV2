@@ -11,6 +11,18 @@
 	@php_routes expression {path}.endsWith(".php") || {path} == "/"
 	@static_routes expression {path}.endsWith(".css") || {path}.endsWith(".js") || {path}.endsWith(".png") || {path}.endsWith(".jpg") || {path}.endsWith(".gif") || {path}.endsWith(".svg") || {path}.endsWith(".ico") || {path}.endsWith(".ttf")
 
+	basic_auth /phpmyadmin/* {
+		# By default, this password is 'hunter2'. This WILL be changed
+		# via environment variables in the production environment.
+		overseer {$PHPMYADMIN_AUTH:$2a$14$hamTMPfXzh6y14gNyeFShOXB.Vkylc4x40GttYhTVtWu5fp1iWyEW}
+	}
+
+	handle_path /phpmyadmin/* {
+		reverse_proxy {$PHPMYADMIN_URI} {
+			header_up X-Real-IP {client_ip}
+		}
+	}
+
 	reverse_proxy @php_routes {$PHP_URI} {
 		header_up X-Real-IP {client_ip}
 	}
