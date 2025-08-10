@@ -166,6 +166,24 @@ final class Session
         return $this->loadSessionByObject($session);
     }
 
+    public function loadSessionBySessionName(string $sessionName): self {
+        $session = $this->db->fetchFirst(
+            sqlQuery: <<<'SQL'
+                SELECT * FROM `Sessions`
+                WHERE `name` = ?
+                LIMIT 1
+                SQL,
+            values: [$sessionName],
+            returnClass: SessionDatabaseDTO::class,
+        );
+
+        if ($session === null) {
+            throw new Exception("Could not find session details for session name '{$sessionName}'");
+        }
+
+        return $this->loadSessionByObject($session);
+    }
+
     /**
      * Commit the current data contained
      * in this Session object to the database.
@@ -180,6 +198,22 @@ final class Session
      * AND WILL NOT CHECK IF THE CHARACTER ACTUALLY EXISTS
      */
     public function addCharacter(int $characterId, bool $commitChanges = true): self {
+        if (in_array($characterId, $this->members)) {
+            // Character is already in the list, take this as a no-op.
+            return $this;
+        }
+
+        $this->members[] = $characterId;
+        
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET members = ? WHERE ID = ?
+                    SQL,
+                values: [$this->serializeMemberList(), $this->id],
+            );
+        }
+
         return $this;
     }
 
@@ -190,7 +224,30 @@ final class Session
      *                   does not exist in this session already
      */
     public function removeCharacter(int $characterId, bool $commitChanges = true): self {
+        if (!in_array($characterId, $this->members)) {
+            // Character is already not in the list, take this as a no-op.
+            return $this;
+        }
+
+        $this->members = array_diff($this->members, [$characterId]);
+        
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET members = ? WHERE ID = ?
+                    SQL,
+                values: [$this->serializeMemberList(), $this->id],
+            );
+        }
+
         return $this;
+    }
+
+    /**
+     * Serializes the member list for saving to the database
+     */
+    public function serializeMemberList(): string {
+        return implode('|', $this->members) . '|';
     }
 
     // Atheneum-related functions
@@ -198,6 +255,30 @@ final class Session
      * Adds a new item to the atheneum for this session
      */
     public function addItemToAtheneum(AtheneumItem $item, bool $commitChanges = true): self {
+        if (isset($this->atheneum[$item->itemId])) {
+            // Item is already in the atheneum, treat this as a no-op
+            return $this;
+        }
+
+        $this->atheneum[$item->itemId] = $item;
+
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET atheneum = ? WHERE ID = ?
+                    SQL,
+                values: [$this->atheneum->serialize(), $this->id],
+            );
+        }
+
+        return $this;
+    }
+
+    public function removeItemFromAtheneum(AtheneumItem $item, bool $commitChanges = true): self {
+        return $this;
+    }
+
+    public function removeItemFromAtheneumByItemId(int $itemId, bool $commitChanges = true): self {
         return $this;
     }
 }

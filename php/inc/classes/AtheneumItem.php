@@ -61,7 +61,7 @@ final class AtheneumItem {
             matches: $matches,
         );
 
-        if (empty($matches)) {
+        if (empty($matches) || count($matches) !== 4) {
             throw new Exception("Cannot parse recipe '{$recipe}'");
         }
 
@@ -83,6 +83,9 @@ final class AtheneumItem {
      */
     public function deserialize(string $itemString): array {
         $exploded = explode(':', $itemString);
+        if (count($exploded) !== 3) {
+            throw new Exception("Cannot deserialize invalid item string '{$itemString}'");
+        }
         $recipe = $this->parseRecipe($exploded[2]);
 
         return [
