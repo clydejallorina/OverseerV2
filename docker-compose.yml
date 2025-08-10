@@ -42,6 +42,7 @@ services:
       - prod
     volumes:
       - phpmyadmin_sessions:/sessions:rw
+      - ./config/myadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
   
   phpmyadmin-dev:
     <<: *phpmyadmin
@@ -51,6 +52,7 @@ services:
       - PMA_PASSWORD=${DB_PASSWORD}
       - PMA_PORT=3306
       - PMA_ABSOLUTE_URI=http://localhost:8000/phpmyadmin/
+      - DEV_MODE=true
     profiles:
       - dev
     ports:
