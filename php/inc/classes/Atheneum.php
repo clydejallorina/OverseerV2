@@ -6,8 +6,6 @@ use ArrayAccess;
 use Exception;
 use Overseer\AtheneumItem;
 
-use function PHPUnit\Framework\callback;
-
 final class Atheneum implements ArrayAccess {
     /** @var array{int, AtheneumItem} Item array where the key is the item (Captchalogue) ID */
     public array $items;
