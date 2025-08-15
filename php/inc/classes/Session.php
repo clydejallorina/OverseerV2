@@ -60,7 +60,7 @@ final class Session
 
         $sessionId = $this->db->insert(
             sqlQuery: <<<'SQL'
-                INSERT INTO Sessions (name, password, creator)
+                INSERT INTO `Sessions` (name, password, creator)
                 VALUES (?, ?, ?)
                 SQL,
             values: [
@@ -188,7 +188,42 @@ final class Session
      * Commit the current data contained
      * in this Session object to the database.
      */
-    public function commitChanges(): void {}
+    public function commitChanges(): void {
+        $session = new SessionDatabaseDTO(
+            id: $this->id,
+            name: $this->name,
+            creator: $this->creator,
+            members: $this->serializeMemberList(),
+            password: $this->password,
+            battlefieldPower: $this->battlefieldPower,
+            atheneum: $this->atheneum->serialize(),
+            exchange: $this->exchange,
+        );
+
+        $this->db->update(
+            sqlQuery: <<<'SQL'
+                UPDATE `Sessions`
+                SET `name` = ?,
+                    creator = ?,
+                    members = ?,
+                    `password` = ?
+                    battlefield_power = ?,
+                    atheneum = ?,
+                    exchange = ?
+                WHERE ID = ?
+                SQL,
+            values: [
+                $session->name,
+                $session->creator,
+                $session->members,
+                $session->password,
+                $session->battlefieldPower,
+                $session->atheneum,
+                $session->exchange,
+                $session->id,
+            ],
+        );
+    }
 
     // Character-related functions
     /**
