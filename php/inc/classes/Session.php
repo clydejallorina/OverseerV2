@@ -310,10 +310,42 @@ final class Session
     }
 
     public function removeItemFromAtheneum(AtheneumItem $item, bool $commitChanges = true): self {
+        if (!isset($this->atheneum[$item])) {
+            // Item isn't in the atheneum, treat this as a no-op.
+            return $this;
+        }
+
+        unset($this->atheneum[$item]);
+
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET atheneum = ? WHERE ID = ?
+                    SQL,
+                values: [$this->atheneum->serialize(), $this->id],
+            );
+        }
+
         return $this;
     }
 
     public function removeItemFromAtheneumByItemId(int $itemId, bool $commitChanges = true): self {
+        if (!isset($this->atheneum[$itemId])) {
+            // Item isn't in the atheneum, treat this as a no-op.
+            return $this;
+        }
+
+        unset($this->atheneum[$itemId]);
+
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET atheneum = ? WHERE ID = ?
+                    SQL,
+                values: [$this->atheneum->serialize(), $this->id],
+            );
+        }
+
         return $this;
     }
 }
