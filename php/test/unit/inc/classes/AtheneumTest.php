@@ -41,4 +41,17 @@ final class AtheneumTest extends TestCase {
         $this->assertEquals($item2, $atheneum[$item2->itemId]);
         $this->assertEquals('1:1:CsG0g10e//3iY3D120|2:1:3iY3D120&&CsG0g10e|', $atheneum->serialize());
     }
+
+    public function testAtheneumUnsetting(): void {
+        $stringToParse = '1:1:CsG0g10e//3iY3D120|2:1:3iY3D120&&CsG0g10e|';
+        $atheneum = new Atheneum($stringToParse);
+
+        $item1 = new AtheneumItem('1:1:CsG0g10e//3iY3D120');
+        $item2 = new AtheneumItem('2:1:3iY3D120&&CsG0g10e');
+
+        unset($atheneum[$item1]);
+        unset($atheneum[$item2->itemId]);
+
+        $this->assertEmpty($atheneum->items);
+    }
 }
