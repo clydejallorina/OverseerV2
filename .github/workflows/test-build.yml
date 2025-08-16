@@ -33,4 +33,4 @@ jobs:
     - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
       run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
     - name: 'Run unit tests'
-      run: docker compose exec php-dev ./vendor/bin/phpunit
+      run: docker compose exec php-dev /var/www/html/vendor/bin/phpunit
