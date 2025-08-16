@@ -13,6 +13,7 @@ COPY ./config/apache/ports-dev.conf /etc/apache2/ports.conf
 
 # Copy php.ini
 COPY ./config/php/dev-php.ini /usr/local/etc/php/php.ini
+COPY ./config/php/dev-php.ini /usr/local/etc/php/conf.d/php.ini
 
 # Ensure that we're listening in on the correct server name / port
 RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
@@ -20,6 +21,10 @@ RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
 # Copy project files
 COPY ./php/ /var/www/html/
 COPY ./config/php/setup.sh /tmp/setup.sh
+
+# Setup logs directory
+RUN mkdir /var/www/html/logs/
+RUN chown -R www-data /var/www/html/logs/
 
 # Run setup
 RUN apt-get update

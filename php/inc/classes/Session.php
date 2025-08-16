@@ -45,6 +45,8 @@ final class Session
     /**
      * Generates a new Session in the database
      * 
+     * @throws Exception Throws whenever the creation details are invalid
+     * 
      * @return Session
      */
     public function generateSession(
@@ -166,6 +168,9 @@ final class Session
         return $this->loadSessionByObject($session);
     }
 
+    /**
+     * @throws Exception Thrown when could not load session details for that session
+     */
     public function loadSessionBySessionName(string $sessionName): self {
         $session = $this->db->fetchFirst(
             sqlQuery: <<<'SQL'
@@ -343,6 +348,28 @@ final class Session
                     UPDATE `Sessions` SET atheneum = ? WHERE ID = ?
                     SQL,
                 values: [$this->atheneum->serialize(), $this->id],
+            );
+        }
+
+        return $this;
+    }
+
+    /**
+     * Password-related functions
+     */
+    public function checkPassword(string $password): bool {
+        return password_verify($password, $this->password);
+    }
+
+    public function setPassword(string $newPassword, bool $commitChanges = true): self {
+        $this->password = password_hash(password: $newPassword, algo: PASSWORD_BCRYPT);
+
+        if ($commitChanges) {
+            $this->db->update(
+                sqlQuery: <<<'SQL'
+                    UPDATE `Sessions` SET `password` = ? WHERE ID = ?
+                    SQL,
+                values: [$this->password, $this->id],
             );
         }
 
