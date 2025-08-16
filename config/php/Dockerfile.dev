@@ -32,4 +32,6 @@ RUN composer install
 # Copy php.ini
 COPY ./config/php/dev-php.ini /usr/local/etc/php/php.ini
 
+WORKDIR /var/www/html/
+
 CMD ["sh", "/tmp/setup.sh"]

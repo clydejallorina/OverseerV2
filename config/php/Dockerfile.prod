@@ -33,4 +33,6 @@ RUN composer install
 # Copy php.ini
 COPY ./config/php/prod-php.ini /usr/local/etc/php/php.ini
 
+WORKDIR /var/www/html/
+
 CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
