@@ -33,8 +33,10 @@ jobs:
     - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
       run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
     - name: 'REMOVE ME BEFORE MERGING'
-      run: docker compose exec php-dev ls -la /var/www/html/
-    - name: 'REMOVE ME BEFORE MERGING'
       run: docker compose exec php-dev ls -la /var/www/html/vendor/
+    - name: 'REMOVE ME BEFORE MERGING'
+      run: docker compose exec php-dev composer diagnose
+    - name: 'REMOVE ME BEFORE MERGING'
+      run: docker compose exec php-dev pwd
     - name: 'Run unit tests'
-      run: docker compose exec php-dev ./vendor/bin/phpunit
+      run: docker compose exec php-dev composer exec phpunit
