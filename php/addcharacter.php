@@ -1,5 +1,13 @@
 <?php
 
+// TODO: Figure out proper auto-loading.
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+
+use Overseer\Session;
+use Overseer\Enum\CharacterAspect;
+use Overseer\Enum\CharacterClass;
+use Overseer\Enum\CharacterMoon;
+
 // Overseer v2 Character Creation Code
 
 // Start the session and fire up the database connection.
@@ -64,20 +72,37 @@ if ($_POST['dreamer'] == "" || $_POST['dreamer'] == "Null") {
     exit();
 }
 
-// Load the session, since we'll need that to check if the password matches and to check for name collisions.
-$sessionquery = $db->prepare("SELECT ID,name,password,members FROM Sessions WHERE name = :sessionname");
-$sessionquery->bindParam(':sessionname', $_POST['session']);
-$sessionquery->execute();
-if ($sessionquery->rowcount() != 1) {
-    $_SESSION['loginmsg'] = "Sorry, the session you provided doesn't exist.";
+$class = CharacterClass::tryFrom($_POST['class']);
+$aspect = CharacterAspect::tryFrom($_POST['aspect']);
+$moon = CharacterMoon::tryFrom($_POST['dreamer']);
+
+if ($class === null || $aspect === null || $moon === null) {
+    $_SESSION['loginmsg'] = 'Invalid class or aspect found. Please try again.';
     header('Location: /?newchar');
     exit();
 }
-$sessionrow = $sessionquery->fetch();
-unset($sessionquery);
+
+// Load the session, since we'll need that to check if the password matches and to check for name collisions.
+$session = new Session();
+try {
+    $session = $session->loadSessionBySessionName($_POST['session']);
+} catch (Exception $e) {
+    $_SESSION['loginmsg'] = "Sorry, the session you provided was not found. Please try again.";
+    header('Location: /?newchar');
+}
+// $sessionquery = $db->prepare("SELECT ID,name,password,members FROM Sessions WHERE name = :sessionname");
+// $sessionquery->bindParam(':sessionname', $_POST['session']);
+// $sessionquery->execute();
+// if ($sessionquery->rowcount() != 1) {
+//     $_SESSION['loginmsg'] = "Sorry, the session you provided doesn't exist.";
+//     header('Location: /?newchar');
+//     exit();
+// }
+// $sessionrow = $sessionquery->fetch();
+// unset($sessionquery);
 
 // Check the session's password.
-if (!password_verify($_POST['sessionpw'], $sessionrow['password'])) {
+if (!$session->checkPassword($_POST['sessionpw'])) {
     $_SESSION['loginmsg'] = "Sorry, the password that you provided for the session is incorrect.";
     header('Location: /?newchar');
     exit();
@@ -86,7 +111,7 @@ if (!password_verify($_POST['sessionpw'], $sessionrow['password'])) {
 // Check that the character's name isn't already being used in this session.
 $checkquery = $db->prepare("SELECT name FROM Characters WHERE name = :charname AND session = :sessionid");
 $checkquery->bindParam(':charname', $_POST['charname']);
-$checkquery->bindParam(':sessionid', $sessionrow['ID']);
+$checkquery->bindParam(':sessionid', $session->id);
 $checkquery->execute();
 if ($checkquery->rowcount() != 0) {
     $_SESSION['loginmsg'] = 'That name is already taken in this session.';
@@ -96,13 +121,20 @@ if ($checkquery->rowcount() != 0) {
 unset($checkquery);
 
 // Determine the starting grist bonus
-$mems = substr_count($sessionrow['members'], "|") + 1;
-if ($mems < 4) {
-    $startgrist = pow(10, $mems) * 2;
+// $mems = substr_count($sessionrow['members'], "|") + 1;
+// if ($mems < 4) {
+//     $startgrist = pow(10, $mems) * 2;
+// } else {
+//     $startgrist = 20000;
+// }
+// $members = $sessionrow['members'];
+
+$memCount = count($session->members) + 1;
+if ($memCount < 4) {
+    $startgrist = pow(10, $memCount) * 2;
 } else {
     $startgrist = 20000;
 }
-$members = $sessionrow['members'];
 
 $grists = "Build_Grist:" . strval($startgrist) . "|";
 $time = time(); //For initializing the fatigue timer.
@@ -127,7 +159,7 @@ $achievements = array('created');
 $insertchar = $db->prepare("INSERT INTO Characters (name, owner, session, class, aspect, dreamer, symbol, grists, stats, fatiguetimer, invslots) VALUES (:charname, :userid, :session, :class, :aspect, :dreamer, :symbol, :grists, :stats, :time, 25);");
 $insertchar->bindParam(':charname', $_POST['charname']);
 $insertchar->bindParam(':userid', $_SESSION['userid']);
-$insertchar->bindParam(':session', $sessionrow['ID']);
+$insertchar->bindParam(':session', $session->id);
 $insertchar->bindParam(':class', $_POST['class']);
 $insertchar->bindParam(':aspect', $_POST['aspect']);
 $insertchar->bindParam(':dreamer', $_POST['dreamer']);
@@ -139,11 +171,12 @@ $insertchar->execute();
 $newcharid = $db->lastInsertId();
 unset($insertchar);
 
-$addtosession = $db->prepare("UPDATE `Sessions` SET members = :members WHERE ID = :sessionid");
-$addtosession->bindValue(':members', $members.strval($newcharid).'|');
-$addtosession->bindParam(':sessionid', $sessionrow['ID']);
-$addtosession->execute();
-unset($addtosession);
+// $addtosession = $db->prepare("UPDATE `Sessions` SET members = :members WHERE ID = :sessionid");
+// $addtosession->bindValue(':members', $members.strval($newcharid).'|');
+// $addtosession->bindParam(':sessionid', $sessionrow['ID']);
+// $addtosession->execute();
+// unset($addtosession);
+$session->addCharacter($newcharid);
 
 $addtoaccount = $db->prepare("UPDATE Users SET characters = :characters WHERE ID = :userid");
 $addtoaccount->bindValue(':characters', $accrow['characters'].strval($newcharid).'|');

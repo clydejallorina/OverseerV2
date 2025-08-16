@@ -2,19 +2,33 @@
 
 namespace Overseer\Caster;
 
+use Closure;
 use CuyZ\Valinor\MapperBuilder;
 use Exception;
 use ReflectionFunction;
 
-final class Caster {
+/**
+ * The Caster class converts arbitrary associative arrays into objects of a class
+ * specified in the function.
+ */
+final class Caster
+{
     /**
-     * Converts an associative array into an object (given that the constructor is set appropriately)
+     * Converts an associative array into an object
+     * (given that the constructor is set appropriately)
+     * 
      * !!! Automatically converts snake_cased keys to camelCase !!!
      * 
      * @template T
+     * 
      * @param array<array-key, mixed> $input
-     * @param class-string<T> $classString
-     * @param list<callable> $customFieldConverters Expects callables with ONLY ONE parameter whose name is an expected camelCased key from the input
+     * @param class-string<T>         $classString
+     * @param list<pure-callable>     $customFieldConverters Expects callables with
+     *                                                       ONLY ONE parameter whose
+     *                                                       name is an expected
+     *                                                       camelCased key from the
+     *                                                       input
+     * 
      * @return T
      * 
      * @throws Exception
@@ -25,16 +39,18 @@ final class Caster {
         array $customFieldConverters = [],
     ): object {
         $builder = new MapperBuilder();
-        // Documentation: https://valinor.cuyz.io/latest/usage/type-strictness-and-flexibility/
+        // MapperBuilder Documentation:
+        // https://valinor.cuyz.io/latest/usage/type-strictness-and-flexibility/
         $builder = $builder
             ->allowScalarValueCasting()
             ->allowUndefinedValues()
             ->allowSuperfluousKeys()
             ->registerConverter(
+                /** @param pure-callable $next */
                 function (array $values, callable $next): object {
                     $camelCaseConverted = array_combine(
                         array_map(
-                            fn ($key) => lcfirst(str_replace('_', '', ucwords($key, '_'))),
+                            fn ($key) => strtolower($key) === 'id' ? 'id' : lcfirst(str_replace('_', '', ucwords($key, '_'))),
                             array_keys($values),
                         ),
                         $values,
@@ -46,10 +62,11 @@ final class Caster {
         
         // Handle custom field constructors
         $builder = $builder->registerConverter(
+            /** @param pure-callable $next */
             function (array $values, callable $next) use ($customFieldConverters): object {
                 $customFields = [];
                 foreach ($customFieldConverters as $fieldConverter) {
-                    $reflection = new ReflectionFunction($fieldConverter);
+                    $reflection = new ReflectionFunction(Closure::fromCallable($fieldConverter));
                     if ($reflection->getNumberOfParameters() !== 1) {
                         throw new Exception('Invalid amount of parameters passed to Caster');
                     }

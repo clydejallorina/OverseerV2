@@ -1,5 +1,7 @@
 FROM php:8.2-apache-bookworm
 
+WORKDIR /var/www/html/
+
 # Setup sessions directory
 RUN mkdir /var/www/sessions/
 RUN chown -R www-data /var/www/sessions/
@@ -10,9 +12,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 # Copy Apache config
 COPY ./config/apache/apache2.conf /etc/apache2/apache2.conf
 COPY ./config/apache/ports-prod.conf /etc/apache2/ports.conf
-
-# Copy php.ini
-COPY ./config/php/prod-php.ini /usr/local/etc/php/php.ini
 
 # Ensure that we're listening in on the correct server name / port
 RUN echo "ServerName localhost:9000" >> /etc/apache2/apache2.conf
@@ -25,8 +24,11 @@ RUN chown -R www-data /var/www/html/
 # Run setup
 RUN apt-get update
 RUN apt-get install -y unzip
-RUN composer install
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install mysqli
+RUN composer install
+
+# Copy php.ini
+COPY ./config/php/prod-php.ini /usr/local/etc/php/php.ini
 
 CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]

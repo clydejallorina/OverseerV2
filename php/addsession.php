@@ -1,5 +1,10 @@
 <?php
 
+// TODO: Figure out proper auto-loading.
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+
+use Overseer\Session;
+
 // Overseer v2 Session Creation Code
 
 // Start the session and fire up the database connection.
@@ -14,15 +19,15 @@ if (empty($_SESSION['userid'])) {
     exit();
 }
 
-// Check that the character's name isnt' blank, otherwise error out.
+// Check that the session's name isnt' blank, otherwise error out.
 if ($_POST['sessionname'] == "") {
     $_SESSION['loginmsg'] = "Your session's name cannot be blank!";
     header('Location: /?newsession');
     exit();
 }
 
-// Check that the character's name consists of only alphanumeric characters and spaces.
-if (!preg_match('/^[a-zA-Z0-9 ]*$/', $_POST['charname'])) {
+// Check that the session's name consists of only alphanumeric characters and spaces.
+if (!preg_match('/^[a-zA-Z0-9 ]*$/', $_POST['sessionname'])) {
     $_SESSION['loginmsg'] = "You may only use alphanumeric characters in your session's name.";
     header('Location: /?newsession');
     exit();
@@ -44,15 +49,16 @@ $accrow = $accquery->fetch();
 unset($accquery);
 
 // Check that the session hasn't already been taken
-$checkquery = $db->prepare("SELECT ID FROM Sessions WHERE name = :session");
-$checkquery->bindParam(':session', $_POST['sessionname']);
-$checkquery->execute();
-if ($checkquery->rowcount() != 0) {
-    $_SESSION['loginmsg'] = 'Sorry, that session name is already taken.';
-    header('Location: /?newsession');
-    exit();
-}
-unset($checkquery);
+// $checkquery = $db->prepare("SELECT ID FROM Sessions WHERE name = :session");
+// $checkquery->bindParam(':session', $_POST['sessionname']);
+// $checkquery->execute();
+// if ($checkquery->rowcount() != 0) {
+//     $_SESSION['loginmsg'] = 'Sorry, that session name is already taken.';
+//     header('Location: /?newsession');
+//     exit();
+// }
+// unset($checkquery);
+// NOTE: Commented out since this is already handled in the generateSession function
 
 if ($_POST['password'] != $_POST['confirmpw']) {
     $_SESSION['loginmsg'] = "Session creation failed: Passwords do not match.";
@@ -61,12 +67,25 @@ if ($_POST['password'] != $_POST['confirmpw']) {
 }
 
 // Insert the session.
-$insertquery = $db->prepare("INSERT INTO Sessions (name, password, creator) VALUES (:name, :password, :username)");
-$insertquery->bindParam(':name', $_POST['sessionname']);
-$insertquery->bindValue(':password', password_hash($_POST['password'], PASSWORD_BCRYPT));
-$insertquery->bindParam(':username', $accrow['username']);
-$insertquery->execute();
-unset($insertquery);
+// $insertquery = $db->prepare("INSERT INTO Sessions (name, password, creator) VALUES (:name, :password, :username)");
+// $insertquery->bindParam(':name', $_POST['sessionname']);
+// $insertquery->bindValue(':password', password_hash($_POST['password'], PASSWORD_BCRYPT));
+// $insertquery->bindParam(':username', $accrow['username']);
+// $insertquery->execute();
+// unset($insertquery);
+$session = new Session();
+
+try {
+    $session = $session->generateSession(
+        sessionName: $_POST['sessionname'],
+        sessionPassword: $_POST['password'],
+        creatorUsername: $accrow['username'],
+    );
+} catch (Exception $exception) {
+    $_SESSION['loginmsg'] = $exception->getMessage();
+    header('Location: /?newsession');
+    exit();
+}
 
 $_SESSION['loginmsg'] = "Creation of session ".$_POST['sessionname']." successful.";
 header('Location: /');

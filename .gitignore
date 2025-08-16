@@ -16,3 +16,5 @@ phpinfo.php
 /rust/target
 
 .vscode
+
+php/logs/*
