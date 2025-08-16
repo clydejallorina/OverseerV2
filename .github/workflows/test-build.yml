@@ -20,7 +20,7 @@ jobs:
       run: |
           touch .env
           echo DB_HOSTNAME="database-dev" >> .env
-          echo DB_USERNAME="root" >> .env
+          echo DB_USERNAME="overseer" >> .env
           echo DB_PASSWORD="overseer" >> .env
           echo DB_DATABASE="OverseerV2" >> .env
           echo OVERSEER_ROOT="/php/" >> .env
