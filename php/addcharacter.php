@@ -1,5 +1,8 @@
 <?php
 
+// TODO: Figure out proper auto-loading.
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+
 use Overseer\Session;
 use Overseer\Enum\CharacterAspect;
 use Overseer\Enum\CharacterClass;
