@@ -12,6 +12,7 @@ services:
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_ROOT_HOST="%"
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
     volumes:
       - "db_data:/var/lib/mysql/"
