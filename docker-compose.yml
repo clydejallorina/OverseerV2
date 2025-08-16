@@ -14,6 +14,7 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_ROOT_HOST="%"
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_LOG_CONSOLE=true
     volumes:
       - "db_data:/var/lib/mysql/"
     command: --lower_case_table_names=1
