@@ -21,10 +21,6 @@ COPY ./php/ /var/www/html/
 RUN touch /var/www/html/devtools/debuglog.txt
 RUN chown -R www-data /var/www/html/
 
-# Setup logs directory
-RUN mkdir /var/www/html/logs/
-RUN chown -R www-data /var/www/html/logs/
-
 # Run setup
 RUN apt-get update
 RUN apt-get install -y unzip
