@@ -9,6 +9,7 @@ services:
       args:
         - MYSQL_DATABASE=${DB_DATABASE}
     environment:
+      - MYSQL_HOST="%"
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}
