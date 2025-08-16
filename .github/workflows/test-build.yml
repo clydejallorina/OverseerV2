@@ -32,7 +32,9 @@ jobs:
       run: sleep 10
     - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
       run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
-    - name: 'Output logs for sanity-checking'
+    - name: 'Output logs for sanity-checking (DB)'
+      run: docker compose logs database-dev
+    - name: 'Output logs for sanity-checking (PHP)'
       run: docker compose logs php-dev
     - name: 'Run unit tests'
       run: docker compose exec php-dev composer exec phpunit
