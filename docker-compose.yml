@@ -18,6 +18,12 @@ services:
     volumes:
       - "db_data:/var/lib/mysql/"
     command: --lower_case_table_names=1
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${DB_USERNAME} --password=${DB_PASSWORD}
+      start_period: 10s
+      interval: 5s
+      timeout: 5s
+      retries: 3
   
   database-dev:
     <<: *database
@@ -42,6 +48,10 @@ services:
     volumes:
       - phpmyadmin_sessions:/sessions:rw
       - ./config/myadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+    depends_on:
+      database:
+        condition: service_healthy
+
   
   phpmyadmin-dev:
     <<: *phpmyadmin
@@ -56,6 +66,9 @@ services:
       - dev
     ports:
       - 8080:80
+    depends_on:
+      database-dev:
+        condition: service_healthy
   
   php:
     &php
@@ -69,7 +82,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - database
+      database:
+        condition: service_healthy
   
   php-dev:
     <<: *php
@@ -84,7 +98,8 @@ services:
     ports:
       - 9000:9000
     depends_on:
-      - database-dev
+      database-dev:
+        condition: service_healthy
   
   rust:
     &rust
@@ -101,7 +116,8 @@ services:
     volumes:
       - session_data:${OVERSEER_PHP_SESSIONS_ROOT}
     depends_on:
-      - database
+      database:
+        condition: service_healthy
   
   rust-dev:
     <<: *rust
@@ -119,7 +135,8 @@ services:
     ports:
       - 8010:8010
     depends_on:
-      - database-dev
+      database-dev:
+        condition: service_healthy
 
   proxy:
     &proxy
