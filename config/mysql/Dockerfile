@@ -3,5 +3,8 @@ FROM mysql:9.3
 ARG MYSQL_DATABASE
 
 # Copy over schema
-COPY ./database.sql /docker-entrypoint-initdb.d/database.sql
-RUN sed -i 's/MYSQL_DATABASE/'$MYSQL_DATABASE'/g' /docker-entrypoint-initdb.d/database.sql
+COPY ./database.sql /docker-entrypoint-initdb.d/0-initial.sql
+RUN sed -i 's/MYSQL_DATABASE/'$MYSQL_DATABASE'/g' /docker-entrypoint-initdb.d/0-initial.sql
+
+# Copy over migrations
+COPY ./migrations/*.sql /docker-entrypoint-initdb.d/
