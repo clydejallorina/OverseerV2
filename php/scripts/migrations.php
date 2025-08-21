@@ -189,6 +189,12 @@ class MigrationsCommand extends Command {
             array: $migrated,
         );
         $awaiting = array_diff($allMigrationsInPath, $migratedFilenames);
+
+        if (count($awaiting) === 0) {
+            $output->writeln($formatter->formatSection('SQL Migrations', 'No awaiting migrations found.'));
+            return;
+        }
+
         foreach ($awaiting as $migrateMe)
         {
             $output->writeln(' - ' . $migrateMe);
