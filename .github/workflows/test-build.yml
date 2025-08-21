@@ -30,6 +30,8 @@ jobs:
       run: docker compose --profile dev up -d --build
     - name: 'Sleep (wait for the services to spin up properly)'
       run: sleep 15
+    - name: 'Run Migration Scripts'
+      run: docker compose exec php-dev composer migrate
     - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
       run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
     - name: 'Output logs for sanity-checking (DB)'

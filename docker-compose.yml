@@ -79,6 +79,7 @@ services:
       dockerfile: ./config/php/Dockerfile.prod
     volumes:
       - session_data:/var/www/sessions/
+      - ./migrations/:/var/www/migrations/
     env_file:
       - .env
     depends_on:
@@ -95,6 +96,7 @@ services:
       - ./php/:/var/www/html/
       - ./vendor/:/var/www/html/vendor/
       - session_data:/var/www/sessions/
+      - ./migrations/:/var/www/migrations/
     ports:
       - 9000:9000
     depends_on:

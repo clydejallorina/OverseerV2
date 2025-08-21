@@ -4,6 +4,7 @@ namespace Overseer\DB;
 
 use Exception;
 use mysqli;
+use mysqli_result;
 use Overseer\Caster\Caster;
 
 /**
@@ -27,7 +28,7 @@ class DB {
      */
     private static function initializeConnection(): void {
         if (self::$dbConnection === null) {
-            self::$dbConnection = mysqli_connect(
+            self::$dbConnection = \mysqli_connect(
                 hostname: $_ENV['DB_HOSTNAME'],
                 username: $_ENV['DB_USERNAME'],
                 password: $_ENV['DB_PASSWORD'],
@@ -39,9 +40,13 @@ class DB {
     /**
      * @template T
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
-     * @param string $expectedTypes Expected types of the values to be used in the query
      * @param list<mixed> $values Values to be used in the query
      * @param class-string<T> $returnClass Class of the object to be returned by this function
+     * @param list<pure-callable> $customFieldConverters Expects callables with
+     *                                                   ONLY ONE parameter whose
+     *                                                   name is an expected
+     *                                                   camelCased key from the
+     *                                                   input
      * @return list<T>
      * 
      * @throws Exception Throws a generic exception whenever non-SELECT queries are ran
@@ -50,6 +55,7 @@ class DB {
         string $sqlQuery,
         array $values,
         string $returnClass,
+        array $customFieldConverters = [],
     ): array {
         if (!str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
@@ -63,7 +69,7 @@ class DB {
 
         $results = [];
         while ($row = $result->fetch_assoc()) {
-            $results[] = Caster::arrayToObject($row, $returnClass);
+            $results[] = Caster::arrayToObject($row, $returnClass, $customFieldConverters);
         }
         
         return $results;
@@ -77,6 +83,11 @@ class DB {
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
      * @param list<mixed> $values Values to be used in the query
      * @param class-string<T> $returnClass Class of the object to be returned by this function
+     * @param list<pure-callable> $customFieldConverters Expects callables with
+     *                                                   ONLY ONE parameter whose
+     *                                                   name is an expected
+     *                                                   camelCased key from the
+     *                                                   input
      * @return T|null
      * 
      * @throws Exception Throws a generic exception whenever non-SELECT queries are ran
@@ -85,6 +96,7 @@ class DB {
         string $sqlQuery,
         array $values,
         string $returnClass,
+        array $customFieldConverters = [],
     ): ?object {
         if (!str_starts_with(strtolower($sqlQuery), 'select')) {
             throw new DBException('This function only accepts SELECT queries!');
@@ -106,14 +118,45 @@ class DB {
             return null;
         }
         
-        return Caster::arrayToObject($row, $returnClass);
+        return Caster::arrayToObject($row, $returnClass, $customFieldConverters);
+    }
+
+    /**
+     * Check if the SELECT query returns at least one row.
+     * 
+     * Will return false if the table doesn't exist.
+     * 
+     * @param string $sqlQuery The SQL query as a MySQLi prepared query
+     * @param list<mixed> $values Values to be used in the query
+     * @return bool
+     */
+    public function exists(
+        string $sqlQuery,
+        array $values = [],
+    ): bool {
+        if (!str_starts_with(strtolower($sqlQuery), 'select')) {
+            throw new DBException('This function only accepts SELECT queries!');
+        }
+
+        try {
+            $result = self::$dbConnection->execute_query($sqlQuery, $values);
+        } catch (Exception $e) {
+            // TODO: Log this exception somewhere
+            return false;
+        }
+        if ($result === false) {
+            return false;
+        }
+
+        $row = $result->fetch_assoc();
+        return (bool)$row;
     }
 
     /**
      * Runs an INSERT INTO query and returns the first ID of the inserted objects (if multiple)
      * 
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
-     * @param string $expectedTypes Expected types of the values to be used in the query
+     * @param list<mixed> $values Values to be used in the query
      */
     public function insert(
         string $sqlQuery,
@@ -136,7 +179,7 @@ class DB {
      * Runs a DELETE query and returns true if successful
      * 
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
-     * @param string $expectedTypes Expected types of the values to be used in the query
+     * @param list<mixed> $values Values to be used in the query
      */
     public function delete(
         string $sqlQuery,
@@ -159,7 +202,7 @@ class DB {
      * Runs an UPDATE query and returns true if successful
      * 
      * @param string $sqlQuery The SQL query as a MySQLi prepared query
-     * @param string $expectedTypes Expected types of the values to be used in the query
+     * @param list<mixed> $values Values to be used in the query
      */
     public function update(
         string $sqlQuery,
@@ -176,5 +219,15 @@ class DB {
         }
 
         return (bool)$result;
+    }
+
+    /**
+     * This is a raw execute function, for when you really don't need any of the fluff here.
+     * 
+     * DO NOT USE THIS FUNCTION UNLESS YOU KNOW WHAT YOU ARE DOING.
+     */
+    public function execute(string $sqlQuery, array $values = []): bool|mysqli_result
+    {
+        return self::$dbConnection->execute_query($sqlQuery, $values);
     }
 }

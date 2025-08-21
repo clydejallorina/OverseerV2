@@ -14586,3 +14586,10 @@ ALTER TABLE `Strifers`
     MODIFY COLUMN `resistances` longtext NOT NULL DEFAULT ('') COMMENT 'Resistances this strifer has',
     MODIFY COLUMN `abilities` longtext NOT NULL DEFAULT ('') COMMENT 'Stores abilities that this strifer possesses',
     MODIFY COLUMN `effects` longtext NOT NULL DEFAULT ('') COMMENT 'Stores effects that this strifer''s basic attacks have';
+
+-- Create the migrations table so that it actually exists on first go
+
+CREATE TABLE IF NOT EXISTS migrations (
+    `filename` VARCHAR(256) NOT NULL PRIMARY KEY COMMENT 'Filename of the migration file applied',
+    `appliedOn` INT(8) NOT NULL COMMENT 'ISO / Epoch timestamp of when this was applied'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
