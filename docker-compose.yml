@@ -41,7 +41,7 @@ services:
       - PMA_HOST=database
       - PMA_USER=${DB_USERNAME}
       - PMA_PASSWORD=${DB_PASSWORD}
-      - PMA_ABSOLUTE_URI=https://v2.overseerreboot.xyz/phpmyadmin/
+      - PMA_ABSOLUTE_URI=https://${SITE_HOSTNAME}/phpmyadmin/
       - BLOWFISH_SECRET=${BLOWFISH_SECRET}
     profiles:
       - prod
