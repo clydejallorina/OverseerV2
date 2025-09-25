@@ -22,7 +22,7 @@ jobs:
           echo DB_DATABASE="overseer_v2" >> .env
           echo OVERSEER_ROOT="/php/" >> .env
           echo OVERSEER_PHP_SESSIONS_ROOT="/.session/" >> .env
-          echo SITE_HOSTNAME=v2.overseerreboot.xyz >> .env
+          echo SITE_HOSTNAME=overseerreboot.xyz >> .env
           echo PHPMYADMIN_AUTH='${{ secrets.PHPMYADMIN_AUTH }}' >> .env
           echo BLOWFISH_SECRET='${{ secrets.BLOWFISH_SECRET }}' >> .env
           docker compose stop $(docker compose ps --services)
