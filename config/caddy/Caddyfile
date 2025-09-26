@@ -35,3 +35,7 @@
 		header_up X-Real-IP {client_ip}
 	}
 }
+
+{$REDIRECT_HOSTNAME:http://redir.localhost:8000} {
+	redir https://{$SITE_HOSTNAME}{uri}
+}
