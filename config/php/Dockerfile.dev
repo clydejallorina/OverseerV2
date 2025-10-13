@@ -2,6 +2,9 @@ FROM php:8.2-apache-bookworm
 
 WORKDIR /var/www/html/
 
+ARG USER_ID
+ARG GROUP_ID
+
 # Setup sessions directory
 RUN mkdir /var/www/sessions/
 RUN chown -R www-data /var/www/sessions/
@@ -26,6 +29,9 @@ RUN apt-get install -y unzip
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install mysqli
 RUN composer install
+
+RUN usermod -u ${USER_ID} www-data
+RUN groupmod -g ${GROUP_ID} www-data
 
 # Copy php.ini
 COPY ./config/php/dev-php.ini /usr/local/etc/php/php.ini

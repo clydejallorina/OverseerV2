@@ -91,6 +91,9 @@ services:
     profiles:
       - dev
     build:
+      args:
+        USER_ID: ${USERID}
+        GROUP_ID: ${GROUPID}
       dockerfile: ./config/php/Dockerfile.dev
     volumes:
       - ./php/:/var/www/html/
