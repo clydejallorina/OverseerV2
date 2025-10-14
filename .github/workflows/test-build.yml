@@ -26,6 +26,8 @@ jobs:
           echo OVERSEER_ROOT="/php/" >> .env
           echo OVERSEER_PHP_SESSIONS_ROOT="/.session/" >> .env
           echo SITE_HOSTNAME=overseerreboot.xyz >> .env
+          echo USERID=1000 >> .env
+          echo GROUPID=1000 >>.env
     - name: 'Run Docker build'
       run: docker compose --profile dev up -d --build
     - name: 'Sleep (wait for the services to spin up properly)'
