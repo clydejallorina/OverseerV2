@@ -12,11 +12,7 @@ The repository also contains the status of the then upcoming Overseer v2.5, on t
 
 Godspeed.
 
-## Setup video
-
-https://youtu.be/sNQw6eO1aJ0
-
-## Dockerized Setup
+## Setup
 
 1. Install [Docker](https://www.docker.com/) (for dev work, you can also look at installing [Docker Desktop](https://www.docker.com/products/docker-desktop/) to have the containers in an easy-to-view GUI)
 2. Copy `.env.dist` to `.env`, and fill up the credentials appropriately
