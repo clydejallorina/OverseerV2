@@ -751,6 +751,7 @@ function strifeInit($charrow): void
     //We could use a single CASE query but this function will be occurring infrequently enough that two queries won't really break the bank.
     //Still if anyone feels like updating it that'd be fine. At the moment it sets both rows to the dreamself's parameters
     //and then modifies the wakeself parameters that are different immediately after.
+	$wakeeffects = mysqli_real_escape_string($connection, $wakeeffects);
     mysqli_query($connection, "UPDATE `Strifers` SET `maxhealth` = $viscosity, `maxenergy` = $viscosity, `abilities` = '" . $charrow['abilities'] . "', `aspect` = '" . $charrow['aspect'] . "', `echeladder` = " . $charrow['echeladder'] . ", `maxpower` = $dreampower, `power` = $dreampower WHERE `Strifers`.`ID` IN (" . $charrow['wakeself'] . ", " . $charrow['dreamself'] . ") LIMIT 2;");
     mysqli_query($connection, "UPDATE `Strifers` SET `maxpower` = $wakepower, `power` = $wakepower, `effects` = '$wakeeffects', `equipbonuses` = '$wakebonuses', `equipstatus` = '$wakestatus' WHERE `Strifers`.`ID` = " . $charrow['wakeself'] . " LIMIT 1;");
 }
