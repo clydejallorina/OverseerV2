@@ -34,10 +34,10 @@ pub async fn character_symbol_post(
             error: Some("File size exceeds 2MB".to_string()),
         }))
     } else if width != 64 || height != 64 {
-        return Ok(HtmlTemplate(CharacterSymbolTemplate {
+        Ok(HtmlTemplate(CharacterSymbolTemplate {
             symbol: "".to_string(),
             error: Some("The file's dimensions need to be 64x64 pixels.".to_string()),
-        }));
+        }))
     } else if !allowed_file_types.contains(&file_ext) {
         Ok(HtmlTemplate(CharacterSymbolTemplate {
             symbol: "".to_string(),

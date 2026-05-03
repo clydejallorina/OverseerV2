@@ -1,3 +1,5 @@
+#![allow(dead_code)] // No use for User yet
+
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::{Extension, RequestPartsExt as _};
