@@ -16,5 +16,6 @@ phpinfo.php
 /rust/target
 
 .vscode
+.zed
 
 php/logs/*
