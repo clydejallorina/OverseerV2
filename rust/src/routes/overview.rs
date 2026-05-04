@@ -2,7 +2,7 @@ use askama::Template;
 use axum::response::IntoResponse;
 
 use crate::achievement::Achievement;
-use crate::error::{Error, Result};
+use crate::error::*;
 use crate::routes::HtmlTemplate;
 use crate::routes::character::Character;
 use crate::routes::character::colour::CharacterColourTemplate;
@@ -19,7 +19,7 @@ pub async fn overview_get(character: Character) -> Result<impl IntoResponse> {
                 character
                     .dreamer
                     .clone()
-                    .ok_or(Error::ShouldHaveDreamer(character.id))?,
+                    .ok_or(anyhow!("Character {} doesn't have a dreamer", character.id))?,
             )
         } else {
             None

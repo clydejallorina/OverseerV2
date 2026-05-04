@@ -4,9 +4,9 @@ use axum::http::request::Parts;
 use axum::{Extension, RequestPartsExt as _};
 use return_ok::some_or_return_ok;
 use sqlx::MySqlPool;
-use tower_sessions::Session;
 
-use crate::error::{Error, Result};
+use crate::error::*;
+use crate::session::Session;
 
 pub mod colour;
 pub mod dreamer;
@@ -43,17 +43,16 @@ impl Character {
         )
         .fetch_optional(db)
         .await
-        .map_err(Error::Sqlx)?);
+        ?);
 
-        let strife = if sql.dreamingstatus == "Awake" {
-            Strifer::load(sql.wakeself, db)
-                .await?
-                .ok_or(Error::StriferNotFound(sql.wakeself))?
+        let sleepself = if sql.dreamingstatus == "Awake" {
+            sql.wakeself
         } else {
-            Strifer::load(sql.dreamself, db)
-                .await?
-                .ok_or(Error::StriferNotFound(sql.dreamself))?
+            sql.dreamself
         };
+        let strife = Strifer::load(sleepself, db)
+            .await?
+            .ok_or(anyhow!("No strifer {}", sleepself))?;
 
         Ok(Some(Character {
             id: sql.id as i64,
@@ -117,21 +116,16 @@ where
     type Rejection = Error;
 
     async fn from_request_parts(req: &mut Parts, _state: &S) -> Result<Self> {
-        let session = req
-            .extract::<Session>()
-            .await
-            .map_err(|(_, err)| Error::Extract(err.to_string()))?;
+        let session = req.extract::<Session>().await?;
         let Extension(db): Extension<MySqlPool> = req.extract().await?;
 
         let character_id = session
-            .get::<String>("character")
-            .await?
-            .map(|s| s.parse::<i64>())
-            .transpose()?
-            .ok_or(Error::NotLoggedInCharacter)?;
+            .get_string("character")
+            .ok_or(anyhow!("Character not logged in"))??
+            .parse::<i64>()?;
         let character = Character::load(character_id, &db)
             .await?
-            .ok_or(Error::CharacterNotFound(character_id))?;
+            .ok_or(anyhow!("Character {character_id} not found"))?;
 
         Ok(character)
     }
@@ -156,14 +150,13 @@ pub struct Strifer {
 
 impl Strifer {
     pub async fn load(id: i64, db: &MySqlPool) -> Result<Option<Strifer>> {
-        sqlx::query_as!(
+        Ok(sqlx::query_as!(
 			Strifer,
 			r#"SELECT power, health, maxhealth as max_health, energy, maxenergy as max_energy, description, echeladder FROM Strifers WHERE id = ?"#,
 			id
 		)
 		.fetch_optional(db)
-		.await
-		.map_err(Error::Sqlx)
+		.await?)
     }
 
     pub fn health_percent(&self) -> f64 {

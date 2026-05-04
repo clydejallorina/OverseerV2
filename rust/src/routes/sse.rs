@@ -7,10 +7,9 @@ use tokio::sync::broadcast::{Receiver, Sender};
 use tracing::debug;
 
 use crate::broadcast::BroadcastMessage;
-use crate::error::Result;
 
 pub async fn sse_get(Extension(sse): Extension<Sender<BroadcastMessage>>) -> impl IntoResponse {
-    async fn get_valid_single(sub: &mut Receiver<BroadcastMessage>) -> Result<Event> {
+    async fn get_valid_single(sub: &mut Receiver<BroadcastMessage>) -> anyhow::Result<Event> {
         let msg = sub.recv().await?;
         let event = Event::default().event(msg.name()).data(msg.data());
         debug!("Sending SSE event: {:?}", event);

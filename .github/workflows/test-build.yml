@@ -2,11 +2,11 @@ name: Generate Builds and Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths-ignore:
       - '.github/**'
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths-ignore:
       - '.github/**'
   workflow_dispatch:
@@ -15,9 +15,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: 'Create dev env file'
-      run: |
+      - uses: actions/checkout@v4
+      - name: 'Create dev env file'
+        run: |
           touch .env
           echo DB_HOSTNAME="database-dev" >> .env
           echo DB_USERNAME="overseer" >> .env
@@ -28,18 +28,18 @@ jobs:
           echo SITE_HOSTNAME=overseerreboot.xyz >> .env
           echo USERID=1000 >> .env
           echo GROUPID=1000 >>.env
-    - name: 'Run Docker build'
-      run: docker compose --profile dev up -d --build
-    - name: 'Sleep (wait for the services to spin up properly)'
-      run: sleep 15
-    - name: 'Run Migration Scripts'
-      run: docker compose exec php-dev composer migrate
-    - name: 'Sanity-check that the proxy is up and serving the index page appropriately'
-      run: curl --fail --silent http://localhost:8000/ -o /dev/null || exit 1
-    - name: 'Output logs for sanity-checking (DB)'
-      run: docker compose logs database-dev
-    - name: 'Output logs for sanity-checking (PHP)'
-      run: docker compose logs php-dev
-    - name: 'Run unit tests'
-      run: docker compose exec php-dev composer exec phpunit
-
+      - name: 'Run Docker build'
+        run: docker compose --profile dev up -d --build
+      - name: 'Sleep (wait for the services to spin up properly)'
+        run: sleep 15
+      - name: 'Run Migration Scripts'
+        run: docker compose exec php-dev composer migrate
+      - name: 'Sanity-check that the proxy is up and serving the index page
+          appropriately'
+        run: curl --fail --silent https://localhost/ -o /dev/null || exit 1
+      - name: 'Output logs for sanity-checking (DB)'
+        run: docker compose logs database-dev
+      - name: 'Output logs for sanity-checking (PHP)'
+        run: docker compose logs php-dev
+      - name: 'Run unit tests'
+        run: docker compose exec php-dev composer exec phpunit

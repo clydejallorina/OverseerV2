@@ -1,6 +1,5 @@
 services:
-  database:
-    &database
+  database: &database
     restart: always
     profiles:
       - prod
@@ -24,7 +23,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-  
+
   database-dev:
     <<: *database
     restart: on-failure
@@ -32,9 +31,8 @@ services:
       - dev
     ports:
       - 3306:3306
-  
-  phpmyadmin:
-    &phpmyadmin
+
+  phpmyadmin: &phpmyadmin
     build:
       dockerfile: ./config/myadmin/Dockerfile
     environment:
@@ -52,7 +50,6 @@ services:
       database:
         condition: service_healthy
 
-  
   phpmyadmin-dev:
     <<: *phpmyadmin
     environment:
@@ -60,7 +57,7 @@ services:
       - PMA_USER=${DB_USERNAME}
       - PMA_PASSWORD=${DB_PASSWORD}
       - PMA_PORT=3306
-      - PMA_ABSOLUTE_URI=http://localhost:8000/phpmyadmin/
+      - PMA_ABSOLUTE_URI=http://localhost:8080/phpmyadmin/
       - DEV_MODE=true
     profiles:
       - dev
@@ -69,9 +66,8 @@ services:
     depends_on:
       database-dev:
         condition: service_healthy
-  
-  php:
-    &php
+
+  php: &php
     profiles:
       - prod
     restart: always
@@ -85,7 +81,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-  
+
   php-dev:
     <<: *php
     profiles:
@@ -101,13 +97,12 @@ services:
       - session_data:/var/www/sessions/
       - ./migrations/:/var/www/migrations/
     ports:
-      - 9000:9000
+      - 9000:80
     depends_on:
       database-dev:
         condition: service_healthy
-  
-  rust:
-    &rust
+
+  rust: &rust
     profiles:
       - prod
     restart: always
@@ -123,31 +118,26 @@ services:
     depends_on:
       database:
         condition: service_healthy
-  
+
   rust-dev:
     <<: *rust
     profiles:
       - dev
     build:
       dockerfile: ./config/rust/Dockerfile.dev
-    volumes:
-      - ./rust/:/rust/
-      - ./php/:/php/
-      - session_data:${OVERSEER_PHP_SESSIONS_ROOT}
     environment:
       - DATABASE_URL=mysql://${DB_USERNAME}:${DB_PASSWORD}@database-dev:3306/${DB_DATABASE}
       - OVERSEER_ROOT=/php/
     ports:
-      - 8010:8010
+      - 8000:80
     depends_on:
       database-dev:
         condition: service_healthy
 
-  proxy:
-    &proxy
+  proxy: &proxy
     profiles:
       - prod
-    image: caddy:2.10-alpine
+    image: caddy:latest
     restart: always
     build:
       context: ./config/caddy
@@ -163,9 +153,10 @@ services:
       - caddy_config:/config
     environment:
       - SITE_HOSTNAME=${SITE_HOSTNAME}
-      - RUST_URI=http://rust:8010
-      - PHP_URI=http://php:9000
-      - PHPMYADMIN_URI=http://phpmyadmin
+      - REDIRECT_HOSTNAME=${REDIRECT_HOSTNAME}
+      - RUST_URI=rust
+      - PHP_URI=php
+      - PHPMYADMIN_URI=phpmyadmin
       - PHPMYADMIN_AUTH=${PHPMYADMIN_AUTH}
     depends_on:
       - php
@@ -177,12 +168,10 @@ services:
     profiles:
       - dev
     environment:
-      - SITE_HOSTNAME=http://localhost:8000
-      - RUST_URI=http://rust-dev:8010
-      - PHP_URI=http://php-dev:9000
-      - PHPMYADMIN_URI=http://phpmyadmin-dev
-    ports:
-      - 8000:8000
+      - SITE_HOSTNAME=${SITE_HOSTNAME}
+      - RUST_URI=rust-dev
+      - PHP_URI=php-dev
+      - PHPMYADMIN_URI=phpmyadmin-dev
     depends_on:
       - php-dev
       - rust-dev

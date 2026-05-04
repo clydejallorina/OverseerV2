@@ -1,20 +1,28 @@
-FROM rust:1.87-bookworm
+# Build stage
+FROM rust:1.95 AS builder
 
-ARG SQLX_OFFLINE="true"
-ARG DATABASE_URL
+WORKDIR /app
 
-# Prepare working folder
-RUN mkdir /rust/
-WORKDIR /rust/
+COPY rust/.sqlx /app/.sqlx
+COPY rust/src /app/src
+COPY rust/templates /app/templates
+COPY rust/Cargo.lock /app/Cargo.lock
+COPY rust/Cargo.toml /app/Cargo.toml
 
-# Prepare Rust Source
-COPY ./rust/ /rust/
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/app/target \
+    cargo build --release --features dev && \
+    cp target/release/overseer_reboot /usr/local/bin/overseer_reboot
 
-# Prepare PHP Source
-RUN mkdir /php/
-COPY ./php/ /php/
 
-# Setup environment
-RUN cargo build --verbose
+# Runtime stage
+FROM debian:bookworm
 
-CMD [ "cargo", "run" ]
+WORKDIR /app
+
+COPY --from=builder /usr/local/bin/overseer_reboot /usr/local/bin/
+
+COPY rust/static /app/static
+
+CMD ["sh", "-c", "/usr/local/bin/overseer_reboot"]

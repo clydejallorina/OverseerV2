@@ -3,86 +3,53 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::path::Path;
 
-use async_trait::async_trait;
+use axum::RequestPartsExt;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use sqlx::types::JsonValue;
-use tower_sessions::cookie::time::{Duration, OffsetDateTime};
-use tower_sessions::session::{Id, Record};
-use tower_sessions::{SessionStore, session_store};
+use tower_cookies::Cookies;
 
-use crate::error::Result;
+use crate::error::*;
 
-#[derive(Clone, Debug, Default)]
-pub struct PhpStore;
+pub struct Session(HashMap<String, PhpValue>);
 
-#[async_trait]
-impl SessionStore for PhpStore {
-    async fn create(&self, record: &mut Record) -> session_store::Result<()> {
-        let mut session_path = get_session_path(&record.id.to_string())
-            .map_err(|e| session_store::Error::Backend(e.to_string()))?;
-        while Path::new(&session_path).exists() {
-            // Session ID collision mitigation.
-            record.id = Id::default();
-            session_path = get_session_path(&record.id.to_string())
-                .map_err(|e| session_store::Error::Backend(e.to_string()))?;
-        }
-        save_session(
-            record.id.to_string(),
-            record
-                .data
-                .iter()
-                .map(|(k, v)| (k.clone(), PhpValue::from(v.clone())))
-                .collect::<HashMap<_, _>>(),
-        )
-        .map_err(|e| session_store::Error::Encode(e.to_string()))
+impl Session {
+    pub fn get_string(&self, key: &str) -> Option<Result<&str>> {
+        self.0.get(key).map(|value| match value {
+            PhpValue::String(string) => Ok(string.as_ref()),
+            _ => Err(anyhow!("{key} is not string"))?,
+        })
     }
 
-    async fn save(&self, record: &Record) -> session_store::Result<()> {
-        save_session(
-            record.id.to_string(),
-            record
-                .data
-                .iter()
-                .map(|(k, v)| (k.clone(), PhpValue::from(v.clone())))
-                .collect::<HashMap<_, _>>(),
-        )
-        .map_err(|e| session_store::Error::Encode(e.to_string()))
+    pub fn get_integer(&self, key: &str) -> Option<Result<i64>> {
+        self.0.get(key).map(|value| match value {
+            PhpValue::Integer(integer) => Ok(*integer),
+            _ => Err(anyhow!("{key} is not integer"))?,
+        })
     }
+}
 
-    async fn load(&self, session_id: &Id) -> session_store::Result<Option<Record>> {
-        load_session(session_id.to_string())
-            .map(|data| match data {
-                None => None,
-                Some(data) => {
-                    let data = data
-                        .into_iter()
-                        .map(|(k, v)| (k, v.into()))
-                        .collect::<HashMap<_, _>>();
-                    Some(Record {
-                        id: *session_id,
-                        data,
-                        expiry_date: OffsetDateTime::now_utc()
-                            .checked_add(Duration::days(1))
-                            .unwrap(),
-                    })
-                }
-            })
-            .map_err(|e| session_store::Error::Decode(e.to_string()))
-    }
+impl<S> FromRequestParts<S> for Session
+where
+    S: Send + Sync,
+{
+    type Rejection = Error;
 
-    async fn delete(&self, session_id: &Id) -> session_store::Result<()> {
-        let session_path = get_session_path(&session_id.to_string())
-            .map_err(|e| session_store::Error::Backend(e.to_string()))?;
-        if Path::new(&session_path).exists() {
-            std::fs::remove_file(session_path)
-                .map_err(|e| session_store::Error::Backend(e.to_string()))
-        } else {
-            Ok(())
-        }
+    async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self> {
+        let cookies: Cookies = parts.extract().await.map_err(|(status, msg)| {
+            anyhow!("Failed to extract cookies, status {status}: {msg}")
+        })?;
+        let cookie = cookies
+            .get("PHPSESSID")
+            .ok_or(anyhow!("No PHP session cookie"))?;
+        let session =
+            load_session(cookie.value().to_string())?.ok_or(anyhow!("No PHP session file"))?;
+        Ok(Session(session))
     }
 }
 
 #[derive(Debug, Clone)]
-pub enum PhpValue {
+enum PhpValue {
     String(String),
     Integer(i64),
     Float(f64),
@@ -184,8 +151,8 @@ impl From<PhpValue> for JsonValue {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
+#[derive(Debug)]
+enum PhpDeserializeError {
     ExpectedPipe,
     ExpectedColon,
     ExpectedSemicolon,
@@ -194,30 +161,39 @@ pub enum Error {
     ExpectedCloseBrace,
     UnknownDatatype(String),
 }
-impl Display for Error {
+impl Display for PhpDeserializeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::ExpectedPipe => write!(f, "expected pipe character '|'"),
-            Error::ExpectedColon => write!(f, "expected colon character ':'"),
-            Error::ExpectedSemicolon => write!(f, "expected semicolon character ';'"),
-            Error::ExpectedQuote => write!(f, "expected quote character '\"'"),
-            Error::ExpectedOpenBrace => write!(f, "expected open brace character '{{'"),
-            Error::ExpectedCloseBrace => write!(f, "expected close brace character '}}'"),
-            Error::UnknownDatatype(datatype) => write!(f, "unknown datatype '{}'", datatype),
+            PhpDeserializeError::ExpectedPipe => write!(f, "expected pipe character '|'"),
+            PhpDeserializeError::ExpectedColon => write!(f, "expected colon character ':'"),
+            PhpDeserializeError::ExpectedSemicolon => write!(f, "expected semicolon character ';'"),
+            PhpDeserializeError::ExpectedQuote => write!(f, "expected quote character '\"'"),
+            PhpDeserializeError::ExpectedOpenBrace => {
+                write!(f, "expected open brace character '{{'")
+            }
+            PhpDeserializeError::ExpectedCloseBrace => {
+                write!(f, "expected close brace character '}}'")
+            }
+            PhpDeserializeError::UnknownDatatype(datatype) => {
+                write!(f, "unknown datatype '{}'", datatype)
+            }
         }
     }
 }
+impl std::error::Error for PhpDeserializeError {}
 
-pub fn load_session(session_id: String) -> Result<Option<HashMap<String, PhpValue>>> {
+fn load_session(session_id: String) -> Result<Option<HashMap<String, PhpValue>>> {
     let session_path = get_session_path(&session_id)?;
+    tracing::debug!("Loading session at {}", session_path);
     if !Path::new(&session_path).exists() {
+        tracing::debug!("Session does not exist");
         return Ok(None);
     }
     let session_data = std::fs::read_to_string(session_path)?;
     deserialize_session(session_data.as_str()).map(Some)
 }
 
-pub fn deserialize_session(session_data: &str) -> Result<HashMap<String, PhpValue>> {
+fn deserialize_session(session_data: &str) -> Result<HashMap<String, PhpValue>> {
     let mut session_data = session_data;
     let mut session_map = HashMap::new();
     while !session_data.is_empty() {
@@ -228,58 +204,66 @@ pub fn deserialize_session(session_data: &str) -> Result<HashMap<String, PhpValu
     Ok(session_map)
 }
 
-pub fn deserialize_key_value(session_data: &str) -> Result<(String, PhpValue, &str)> {
-    let (name, session_data) = session_data.split_once('|').ok_or(Error::ExpectedPipe)?;
+fn deserialize_key_value(session_data: &str) -> Result<(String, PhpValue, &str)> {
+    let (name, session_data) = session_data
+        .split_once('|')
+        .ok_or(PhpDeserializeError::ExpectedPipe)?;
     let (value, session_data) = deserialize_value(session_data)?;
     Ok((name.to_string(), value, session_data))
 }
 
-pub fn deserialize_value(session_data: &str) -> Result<(PhpValue, &str)> {
-    let (datatype, session_data) = session_data.split_once(':').ok_or(Error::ExpectedColon)?;
+fn deserialize_value(session_data: &str) -> Result<(PhpValue, &str)> {
+    let (datatype, session_data) = session_data
+        .split_once(':')
+        .ok_or(PhpDeserializeError::ExpectedColon)?;
     match datatype {
         "i" => {
             let (value, session_data) = session_data
                 .split_once(';')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             let value = value.parse::<i64>()?;
             Ok((PhpValue::Integer(value), session_data))
         }
         "d" => {
             let (value, session_data) = session_data
                 .split_once(';')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             let value = value.parse::<f64>()?;
             Ok((PhpValue::Float(value), session_data))
         }
         "b" => {
             let (value, session_data) = session_data
                 .split_once(';')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             let value = value.parse::<i64>()? != 0;
             Ok((PhpValue::Boolean(value), session_data))
         }
         "s" => {
             let (length, session_data) = session_data
                 .split_once(':')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             let length: usize = length.parse()?;
-            let (_, session_data) = session_data.split_once('"').ok_or(Error::ExpectedQuote)?;
+            let (_, session_data) = session_data
+                .split_once('"')
+                .ok_or(PhpDeserializeError::ExpectedQuote)?;
             let (value, session_data) = session_data.split_at(length);
-            let (_, session_data) = session_data.split_once('"').ok_or(Error::ExpectedQuote)?;
+            let (_, session_data) = session_data
+                .split_once('"')
+                .ok_or(PhpDeserializeError::ExpectedQuote)?;
             let (_, session_data) = session_data
                 .split_once(';')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             Ok((PhpValue::String(value.to_string()), session_data))
         }
         "a" => {
             let mut map = HashMap::new();
             let (length, session_data) = session_data
                 .split_once(':')
-                .ok_or(Error::ExpectedSemicolon)?;
+                .ok_or(PhpDeserializeError::ExpectedSemicolon)?;
             let length: usize = length.parse()?;
             let (_, mut session_data) = session_data
                 .split_once('{')
-                .ok_or(Error::ExpectedOpenBrace)?;
+                .ok_or(PhpDeserializeError::ExpectedOpenBrace)?;
             for _ in 0..length {
                 let (key, session_data_) = deserialize_value(session_data)?;
                 let (value, session_data_) = deserialize_value(session_data_)?;
@@ -288,26 +272,30 @@ pub fn deserialize_value(session_data: &str) -> Result<(PhpValue, &str)> {
             }
             let (_, session_data) = session_data
                 .split_once('}')
-                .ok_or(Error::ExpectedCloseBrace)?;
+                .ok_or(PhpDeserializeError::ExpectedCloseBrace)?;
             Ok((PhpValue::Array(map), session_data))
         }
         "n" => Ok((PhpValue::Null, session_data)),
-        _ => Err(Error::UnknownDatatype(datatype.to_string()).into()),
+        _ => Err(PhpDeserializeError::UnknownDatatype(datatype.to_string()).into()),
     }
 }
 
-pub fn get_session_path(session_id: &str) -> Result<String> {
+fn get_session_path(session_id: &str) -> Result<String> {
+    tracing::debug!("id {}", session_id);
     let root = std::env::var("OVERSEER_PHP_SESSIONS_ROOT")?;
+    tracing::debug!("root {}", root);
     Ok(format!("{}/sess_{}", root, session_id))
 }
 
-pub fn save_session(session_id: String, session_data: HashMap<String, PhpValue>) -> Result<()> {
-    let session_path = get_session_path(&session_id)?;
+#[allow(dead_code)]
+fn save_session(session_id: &str, session_data: HashMap<String, PhpValue>) -> Result<()> {
+    let session_path = get_session_path(session_id)?;
+    tracing::debug!("Saving session at {}", session_path);
     let session_data = serialize_session(session_data)?;
     std::fs::write(session_path, session_data).map_err(|e| e.into())
 }
 
-pub fn serialize_session(session_data: HashMap<String, PhpValue>) -> Result<String> {
+fn serialize_session(session_data: HashMap<String, PhpValue>) -> Result<String> {
     let mut session_str = String::new();
     for (name, value) in session_data {
         session_str.push_str(&serialize_key_value(&name, &value)?);
@@ -315,11 +303,11 @@ pub fn serialize_session(session_data: HashMap<String, PhpValue>) -> Result<Stri
     Ok(session_str)
 }
 
-pub fn serialize_key_value(name: &str, value: &PhpValue) -> Result<String> {
+fn serialize_key_value(name: &str, value: &PhpValue) -> Result<String> {
     Ok(format!("{}|{}", name, serialize_value(value)?))
 }
 
-pub fn serialize_value(value: &PhpValue) -> Result<String> {
+fn serialize_value(value: &PhpValue) -> Result<String> {
     match value {
         PhpValue::String(s) => Ok(format!("s:{}:\"{}\";", s.len(), s)),
         PhpValue::Integer(i) => Ok(format!("i:{};", i)),
@@ -333,5 +321,17 @@ pub fn serialize_value(value: &PhpValue) -> Result<String> {
             Ok(format!("a:{}:{{{}}};", map.len(), entries))
         }
         PhpValue::Null => Ok("n;".to_string()),
+    }
+}
+
+#[allow(dead_code)]
+fn delete_session(session_id: &str) -> Result<bool> {
+    let session_path = get_session_path(session_id)?;
+    tracing::debug!("Deleting session at {}", session_path);
+    if Path::new(&session_path).exists() {
+        std::fs::remove_file(session_path)?;
+        Ok(true)
+    } else {
+        Ok(false)
     }
 }

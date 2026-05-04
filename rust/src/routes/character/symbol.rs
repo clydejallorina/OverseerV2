@@ -5,7 +5,7 @@ use axum_typed_multipart::TypedMultipart;
 use imagesize::ImageSize;
 use sqlx::MySqlPool;
 
-use crate::error::{Error, Result};
+use crate::error::*;
 use crate::routes::HtmlTemplate;
 use crate::routes::character::Character;
 
@@ -16,12 +16,14 @@ pub async fn character_symbol_post(
 ) -> Result<impl IntoResponse> {
     let file = form.file;
     let filepath = file.path();
-    let filename = filepath.file_name().ok_or(Error::InvalidFilename)?;
+    let filename = filepath
+        .file_name()
+        .ok_or(anyhow!("No filename of {:?}", filepath))?;
     let (_file_basename, file_ext) = filename
         .to_str()
-        .ok_or(Error::InvalidFilename)?
+        .ok_or(anyhow!("osstr isn't str {:?}", filename))?
         .rsplit_once('.')
-        .ok_or(Error::InvalidFilename)?;
+        .ok_or(anyhow!("no dot in {:?}", filename))?;
     let filesize = file.as_file().metadata()?.len();
     let allowed_file_types = ["png"];
     let ImageSize { width, height } = imagesize::size(filepath)?;

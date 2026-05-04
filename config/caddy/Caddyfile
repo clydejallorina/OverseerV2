@@ -1,4 +1,4 @@
-{$SITE_HOSTNAME:http://localhost:8000} {
+{$SITE_HOSTNAME:localhost} {
 	log {
 		format json
 		output file /var/log/access.log {
@@ -36,6 +36,6 @@
 	}
 }
 
-{$REDIRECT_HOSTNAME:http://redir.localhost:8000} {
+{$REDIRECT_HOSTNAME:redir.localhost} {
 	redir https://{$SITE_HOSTNAME}{uri}
 }
